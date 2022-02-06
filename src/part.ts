@@ -90,7 +90,7 @@ function updatePart(p: Part, time: number) {
     return;
   }
   if (
-    p.soundEffect.type === "synth" &&
+    (p.soundEffect.type === "synth" || p.soundEffect.type === "tone") &&
     n.quantizedEndStep === notesStepsIndex
   ) {
     soundEffect.stop(p.soundEffect, time);
@@ -98,7 +98,7 @@ function updatePart(p: Part, time: number) {
   if (n.quantizedStartStep !== notesStepsIndex) {
     return;
   }
-  if (p.soundEffect.type === "synth") {
+  if (p.soundEffect.type === "synth" || p.soundEffect.type === "tone") {
     soundEffect.stop(p.soundEffect);
   }
   if (p.isDrum) {

@@ -73,22 +73,24 @@ async function generate() {
       const isDrum = i > 1;
       let se: soundEffect.SoundEffect;
       if (isDrum) {
-        se = soundEffect.get(
-          random.select(["hit", "click"]),
-          random.getInt(999999999),
-          2,
-          0.1
-        );
-      } else {
-        const al = calcNoteLengthAverage(s);
-        const t = random.get() < 1 / al ? "select" : "synth";
+        const t = random.select(["hit", "click", "explosion"]);
         se = soundEffect.get(
           t,
           random.getInt(999999999),
-          2,
-          0.05,
+          t === "explosion" ? 1 : 2,
+          t === "explosion" ? 0.05 : 0.1
+        );
+      } else {
+        const al = calcNoteLengthAverage(s);
+        const t =
+          random.get() < 1 / al ? "select" : random.select(["synth", "tone"]);
+        se = soundEffect.get(
+          t,
+          random.getInt(999999999),
+          t === "tone" ? 1 : 2,
+          t === "tone" ? 0.2 : 0.05,
           0.35173364,
-          t === "synth" ? 0.2 : 1
+          t !== "select" ? 0.1 : 1
         );
       }
       return {
