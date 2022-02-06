@@ -6,13 +6,14 @@ import * as generator from "./generator";
 import { cloneDeep, times } from "./util";
 import { Random, random } from "./random";
 
+const seedRandom = new Random();
 let originPlayer: player.Player;
 let generatedPlayer: player.Player;
 let soundEffects: { [key: string]: soundEffect.SoundEffect };
+let progressBar: HTMLDivElement;
 
 const originNotesStepsCount = 32;
 const generatedNotesStepsCount = 64;
-const seedRandom = new Random();
 const melodyTrackCount = 2;
 const drumTrackCount = 4;
 
@@ -40,7 +41,8 @@ async function generate() {
     0.99,
     true,
     false,
-    generatedNotesStepsCount
+    generatedNotesStepsCount,
+    progressBar
   );
   if (originPlayer.tracks.length > melodyTrackCount) {
     const drumSequences = [];
@@ -54,7 +56,8 @@ async function generate() {
       0.99,
       false,
       true,
-      generatedNotesStepsCount
+      generatedNotesStepsCount,
+      progressBar
     );
     const generatedDrumSequences = generator.pitchSequenceToDrumSequences(
       generatedDrumPitchSequences[0],
@@ -93,6 +96,8 @@ async function generate() {
     })
   );
   player.setSequences(generatedPlayer, generatedSequences);
+  progressBar.textContent = "Done.";
+  progressBar.style.width = "100%";
 }
 
 function calcNoteLengthAverage(s) {
@@ -142,7 +147,10 @@ function init() {
   soundEffect.types.forEach((t) => {
     soundEffects[t] = soundEffect.get(t, 5);
   });
-  document.getElementById("generate").addEventListener("click", generate);
+  document.getElementById("generate").addEventListener("click", () => {
+    setTimeout(generate, 0);
+  });
+  progressBar = document.getElementById("progress_bar") as HTMLDivElement;
   update();
 }
 

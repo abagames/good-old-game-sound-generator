@@ -1,13 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>good-old-game-sound-generator</title>
+    <link href="./assets/bootstrap.min.css" rel="stylesheet" />
+    <link href="./assets/starter-template.css" rel="stylesheet" />
     <script type="module" src="./src/main.ts"></script>
   </head>
-  <body>
-    <input type="button" id="generate" value="Generate" />
-    <br /><br />
-    <div id="generated"></div>
-    <div id="origin"></div>
+  <body style="background-color: #ddd">
+    <div class="col-lg-10 mx-auto p-3 py-md-3">
+      <header class="d-flex align-items-center pb-1 mb-1 border-bottom">
+        <span class="fs-4">good-old-game-sound-generator</span>
+      </header>
+      <main>
+        <div class="row g-5">
+          <div class="col-md-4">
+            <button id="generate" class="btn btn-primary" type="button">
+              Generate
+            </button>
+          </div>
+          <div class="col-md-8">
+            <div class="progress" style="height: 20px">
+              <div
+                class="progress-bar"
+                id="progress_bar"
+                role="progressbar"
+                style="width: 0%"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <br />
+        <div class="row g-5">
+          <div id="generated"></div>
+        </div>
+        <div class="row g-5">
+          <div id="origin"></div>
+        </div>
+      </main>
+    </div>
   </body>
 </html>
