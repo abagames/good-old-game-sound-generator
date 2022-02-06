@@ -1,0 +1,33 @@
+export let audioContext: AudioContext;
+export let tempo: number;
+export let playInterval: number;
+export let quantize: number;
+let isStarted = false;
+
+export function init() {
+  const AudioContext =
+    window.AudioContext || (window as any).webkitAudioContext;
+  audioContext = new AudioContext();
+  setTempo(150);
+  quantize = 0.5;
+}
+
+export async function start() {
+  if (isStarted) {
+    return;
+  }
+  isStarted = true;
+  playEmptyBuffer();
+}
+
+export function setTempo(v: number) {
+  tempo = v;
+  playInterval = 60 / tempo;
+}
+
+function playEmptyBuffer() {
+  const bufferSource = audioContext.createBufferSource();
+  bufferSource.start = bufferSource.start || (bufferSource as any).noteOn;
+  bufferSource.connect(audioContext.destination);
+  bufferSource.start();
+}
