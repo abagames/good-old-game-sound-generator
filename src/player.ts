@@ -29,7 +29,8 @@ const stepsPerQuarter = 4;
 export function get(
   trackCount: number,
   notesStepsCount: number,
-  parent: HTMLElement
+  parent: HTMLElement,
+  playButtonCallback: () => void
 ): Player {
   const tracks: Track[] = times(trackCount, () => {
     return {
@@ -69,7 +70,7 @@ export function get(
     isPlaying: false,
     playButton,
   };
-  player.playButton.addEventListener("click", () => playStopToggle(player));
+  player.playButton.addEventListener("click", playButtonCallback);
   return player;
 }
 

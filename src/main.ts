@@ -24,6 +24,8 @@ function update() {
 }
 
 async function generate() {
+  player.stop(generatedPlayer);
+  player.stop(originPlayer);
   const seed = seedRandom.getInt(999999999);
   console.log(seed);
   const tracks = originPlayer.tracks;
@@ -98,6 +100,7 @@ async function generate() {
   player.setSequences(generatedPlayer, generatedSequences);
   progressBar.textContent = "Done.";
   progressBar.style.width = "100%";
+  player.play(generatedPlayer);
 }
 
 function calcNoteLengthAverage(s) {
@@ -112,15 +115,23 @@ function init() {
   initAudio();
   soundEffect.init();
   generator.init();
-  originPlayer = player.get(
-    melodyTrackCount + drumTrackCount,
-    originNotesStepsCount,
-    document.getElementById("origin")
-  );
   generatedPlayer = player.get(
     melodyTrackCount + drumTrackCount,
     generatedNotesStepsCount,
-    document.getElementById("generated")
+    document.getElementById("generated"),
+    () => {
+      player.stop(originPlayer);
+      player.playStopToggle(generatedPlayer);
+    }
+  );
+  originPlayer = player.get(
+    melodyTrackCount + drumTrackCount,
+    originNotesStepsCount,
+    document.getElementById("origin"),
+    () => {
+      player.stop(generatedPlayer);
+      player.playStopToggle(originPlayer);
+    }
   );
   const mmlStrings = [
     "l16 o4 r>c2. r8c r<a+2. r8a+",
