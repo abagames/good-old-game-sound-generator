@@ -1,3 +1,4 @@
 docs/build/* linguist-generated
 docs/* linguist-documentation
 assets/* linguist-vendored
+lib/* linguist-vendored
