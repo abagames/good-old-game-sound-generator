@@ -24,11 +24,11 @@ export type Player = {
   playButton: HTMLButtonElement;
 };
 
+const timePerStep = 0.125;
 const stepsPerQuarter = 4;
 
 export function get(
   trackCount: number,
-  notesStepsCount: number,
   parent: HTMLElement,
   playButtonCallback: () => void
 ): Player {
@@ -66,7 +66,7 @@ export function get(
   });
   const player: Player = {
     tracks,
-    notesStepsCount,
+    notesStepsCount: 0,
     isPlaying: false,
     playButton,
   };
@@ -85,6 +85,7 @@ export function setSequences(player: Player, sequences) {
   player.tracks.forEach((t, i) => {
     setSequence(t, sequences[i]);
   });
+  setTotalTimeAndVisualizer(player);
 }
 
 export function setTrackSound(
@@ -138,6 +139,7 @@ function recreateSequence(player: Player) {
     t.mml = t.mmlInput.value;
     setSequence(t, createSequence(t.mml));
   });
+  setTotalTimeAndVisualizer(player);
 }
 
 function checkMml(player: Player) {
@@ -157,13 +159,32 @@ function checkMml(player: Player) {
       t.mmlInput.value = "";
     });
   }
+  setTotalTimeAndVisualizer(player);
   return !isCleared;
 }
 
+function setTotalTimeAndVisualizer(player: Player) {
+  player.notesStepsCount = 0;
+  player.tracks.forEach((t) => {
+    const stepsCount =
+      t.sequence.totalQuantizedSteps != null
+        ? t.sequence.totalQuantizedSteps
+        : t.sequence.totalTime / timePerStep;
+    if (stepsCount > player.notesStepsCount) {
+      player.notesStepsCount = stepsCount;
+    }
+  });
+  const totalTime = player.notesStepsCount * timePerStep;
+  player.tracks.forEach((t) => {
+    t.sequence.totalTime = totalTime;
+    t.sequence.totalQuantizedSteps = player.notesStepsCount;
+    const rgb = t.isDrum ? "150, 150, 150" : "100, 100, 200";
+    t.visualizer = getVisualizer(t.sequence, t.canvas, rgb);
+  });
+}
+
 function setSequence(track: Track, sequence) {
-  const rgb = track.isDrum ? "150, 150, 150" : "100, 100, 200";
   track.sequence = sequence;
-  track.visualizer = getVisualizer(sequence, track.canvas, rgb);
   track.mml = track.mmlInput.value = sequenceToMml(sequence);
 }
 

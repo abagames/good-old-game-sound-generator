@@ -13,7 +13,6 @@ let soundEffects: { [key: string]: soundEffect.SoundEffect };
 let progressBar: HTMLDivElement;
 let seedTextInput: HTMLInputElement;
 
-const originNotesStepsCount = 32;
 const generatedNotesStepsCount = 64;
 const melodyTrackCount = 2;
 const drumTrackCount = 4;
@@ -119,7 +118,6 @@ function init() {
   generator.init();
   generatedPlayer = player.get(
     melodyTrackCount + drumTrackCount,
-    generatedNotesStepsCount,
     document.getElementById("generated"),
     () => {
       player.stop(originPlayer);
@@ -128,7 +126,6 @@ function init() {
   );
   originPlayer = player.get(
     melodyTrackCount + drumTrackCount,
-    originNotesStepsCount,
     document.getElementById("origin"),
     () => {
       player.stop(generatedPlayer);
