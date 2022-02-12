@@ -90,7 +90,8 @@ async function generate() {
           t === "tone" ? 1 : 2,
           t === "tone" ? 0.2 : 0.05,
           0.35173364,
-          t !== "select" ? 0.1 : 1
+          t !== "select" ? 0.1 : 1,
+          t !== "select" ? 2 : 1
         );
       }
       return {

@@ -64,7 +64,8 @@ export function get(
   count = 2,
   volume = 0.1,
   freq: number = undefined,
-  attackRatio: number = 1
+  attackRatio: number = 1,
+  sustainRatio: number = 1
 ): SoundEffect {
   const buffers = times(count, (i) => {
     random.setSeed(seed + i * 1063);
@@ -74,6 +75,7 @@ export function get(
       p.p_base_freq = freq;
     }
     p.p_env_attack *= attackRatio;
+    p.p_env_sustain *= sustainRatio;
     const s = new SoundEffect(p).generate();
     if (s.buffer.length === 0) {
       return audioContext.createBuffer(1, 1, s.sampleRate);
