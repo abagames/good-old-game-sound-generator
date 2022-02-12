@@ -145,10 +145,8 @@ function recreateSequence(player: Player) {
 function checkMml(player: Player) {
   let isCleared = true;
   player.tracks.forEach((t) => {
-    if (t.mml == null || t.mml !== t.mmlInput.value) {
-      t.mml = t.mmlInput.value;
-      setSequence(t, createSequence(t.mml));
-    }
+    t.mml = t.mmlInput.value;
+    setSequence(t, createSequence(t.mml));
     if (t.sequence.totalTime > 0 || t.sequence.totalQuantizedSteps > 0) {
       isCleared = false;
     }
