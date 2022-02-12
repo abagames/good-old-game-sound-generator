@@ -12,8 +12,9 @@ let generatedPlayer: player.Player;
 let soundEffects: { [key: string]: soundEffect.SoundEffect };
 let progressBar: HTMLDivElement;
 let seedTextInput: HTMLInputElement;
+let generatedStepsCountTextInput: HTMLInputElement;
 
-const generatedNotesStepsCount = 64;
+const defaultGeneratedNotesStepsCount = 64;
 const melodyTrackCount = 2;
 const drumTrackCount = 4;
 
@@ -26,6 +27,17 @@ function update() {
 async function generate(seed: number) {
   player.stop(generatedPlayer);
   player.stop(originPlayer);
+  let generatedNotesStepsCount = Number.parseInt(
+    generatedStepsCountTextInput.value
+  );
+  if (
+    Number.isNaN(generatedNotesStepsCount) ||
+    generatedNotesStepsCount < 4 ||
+    generatedNotesStepsCount > 256
+  ) {
+    generatedNotesStepsCount = defaultGeneratedNotesStepsCount;
+    generatedStepsCountTextInput.value = `${generatedNotesStepsCount}`;
+  }
   const tracks = originPlayer.tracks;
   const sequences = [];
   for (let i = 0; i < melodyTrackCount; i++) {
@@ -169,6 +181,10 @@ function init() {
       const seed = Number.parseInt(seedTextInput.value);
       setTimeout(() => generate(seed), 0);
     });
+  generatedStepsCountTextInput = document.getElementById(
+    "generated_steps_count"
+  ) as HTMLInputElement;
+  generatedStepsCountTextInput.value = `${defaultGeneratedNotesStepsCount}`;
   progressBar = document.getElementById("progress_bar") as HTMLDivElement;
   update();
 }
