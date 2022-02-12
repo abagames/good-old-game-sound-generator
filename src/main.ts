@@ -11,6 +11,7 @@ let originPlayer: player.Player;
 let generatedPlayer: player.Player;
 let soundEffects: { [key: string]: soundEffect.SoundEffect };
 let progressBar: HTMLDivElement;
+let seedTextInput: HTMLInputElement;
 
 const originNotesStepsCount = 32;
 const generatedNotesStepsCount = 64;
@@ -23,11 +24,9 @@ function update() {
   soundEffect.update();
 }
 
-async function generate() {
+async function generate(seed: number) {
   player.stop(generatedPlayer);
   player.stop(originPlayer);
-  const seed = seedRandom.getInt(999999999);
-  console.log(seed);
   const tracks = originPlayer.tracks;
   const sequences = [];
   for (let i = 0; i < melodyTrackCount; i++) {
@@ -161,9 +160,18 @@ function init() {
   soundEffect.types.forEach((t) => {
     soundEffects[t] = soundEffect.get(t, 5);
   });
+  seedTextInput = document.getElementById("random_seed") as HTMLInputElement;
   document.getElementById("generate").addEventListener("click", () => {
-    setTimeout(generate, 0);
+    const seed = seedRandom.getInt(999999999);
+    seedTextInput.value = `${seed}`;
+    setTimeout(() => generate(seed), 0);
   });
+  document
+    .getElementById("generate_from_seed")
+    .addEventListener("click", () => {
+      const seed = Number.parseInt(seedTextInput.value);
+      setTimeout(() => generate(seed), 0);
+    });
   progressBar = document.getElementById("progress_bar") as HTMLDivElement;
   update();
 }
