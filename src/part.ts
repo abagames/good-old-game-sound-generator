@@ -2,14 +2,8 @@ import { audioContext, playInterval } from "./audio";
 import { getQuantizedTime } from "./util";
 import * as soundEffect from "./soundEffect";
 
-export type SynthNode = {
-  node;
-  freq: string;
-  duration: string;
-  volume: number;
-};
-
 export type Part = {
+  mml: string;
   sequence;
   soundEffect: soundEffect.SoundEffect;
   isDrum: boolean;
@@ -26,17 +20,24 @@ let noteInterval: number;
 let isPlaying = false;
 
 export function init(_notesStepsCount: number) {
+  if (parts != null) {
+    parts.forEach((p) => {
+      soundEffect.remove(p.soundEffect);
+    });
+  }
   parts = [];
   notesStepsCount = _notesStepsCount;
 }
 
 export function add(
+  mml: string,
   sequence,
   soundEffect: soundEffect.SoundEffect,
   isDrum: boolean,
   visualizer?
 ) {
   const p: Part = {
+    mml,
     sequence,
     soundEffect,
     isDrum,
@@ -49,6 +50,7 @@ export function add(
 }
 
 export function remove(tp: Part) {
+  soundEffect.remove(tp.soundEffect);
   parts = parts.filter((p) => p !== tp);
 }
 
@@ -119,4 +121,25 @@ function updatePart(p: Part, time: number) {
   if (p.noteIndex >= p.sequence.notes.length) {
     p.noteIndex = 0;
   }
+}
+
+export function toJson(part: Part) {
+  return {
+    mml: part.mml,
+    soundEffect: soundEffect.toJson(part.soundEffect),
+    isDrum: part.isDrum,
+  };
+}
+
+export function fromJSON(json, mmlToSequence: Function = undefined): Part {
+  const p: Part = {
+    mml: json.mml,
+    sequence: mmlToSequence(json.mml),
+    soundEffect: soundEffect.fromJSON(json.soundEffect),
+    isDrum: json.isDrum,
+    noteIndex: 0,
+    endStep: -1,
+  };
+  parts.push(p);
+  return p;
 }

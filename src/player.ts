@@ -22,10 +22,14 @@ export type Player = {
   notesStepsCount: number;
   isPlaying: boolean;
   playButton: HTMLButtonElement;
+  stateTextInput: HTMLInputElement;
+  parent: HTMLElement;
+  trackDiv: HTMLDivElement;
 };
 
 const timePerStep = 0.125;
 const stepsPerQuarter = 4;
+let playerCount = 0;
 
 export function get(
   trackCount: number,
@@ -44,12 +48,73 @@ export function get(
       mmlInput: [],
     };
   });
-  const playButton = document.createElement("button");
-  playButton.classList.add("btn");
-  playButton.classList.add("btn-primary");
-  playButton.textContent = "Play";
-  parent.appendChild(playButton);
-  times(trackCount, (i) => {
+  const stateDiv = document.createElement("div");
+  stateDiv.classList.add("row");
+  stateDiv.classList.add("g-5");
+  stateDiv.innerHTML = `
+  <div class="col-md-1">
+    <button id="play_${playerCount}" class="btn btn-primary" type="button">
+      Play
+    </button>
+  </div>
+  <div class="col-md-1">State</div>
+  <div class="col-md-6">
+    <input id="state_text_${playerCount}" type="text" class="form-control" />
+  </div>
+  <div class="col-md-1" id="state_buttons">
+    <button id="load_${playerCount}" class="btn btn-primary" type="button">
+      Load
+    </button>
+  </div>
+  <div class="col-md-2" id="state_buttons">
+    <button
+      id="copy_to_clipboard_${playerCount}"
+      class="btn btn-primary"
+      type="button"
+    >
+      Copy to clipboard
+    </button>
+  </div>
+  `;
+  parent.appendChild(stateDiv);
+  parent.appendChild(document.createElement("br"));
+  const stateTextInput = document.getElementById(
+    `state_text_${playerCount}`
+  ) as HTMLInputElement;
+  document
+    .getElementById(`load_${playerCount}`)
+    .addEventListener("click", () => {
+      stop(player);
+      fromJSON(player, JSON.parse(stateTextInput.value));
+    });
+  document
+    .getElementById(`copy_to_clipboard_${playerCount}`)
+    .addEventListener("click", () => {
+      createParts(player);
+      navigator.clipboard.writeText(player.stateTextInput.value);
+    });
+  const player: Player = {
+    tracks,
+    notesStepsCount: 0,
+    isPlaying: false,
+    playButton: document.getElementById(
+      `play_${playerCount}`
+    ) as HTMLInputElement,
+    stateTextInput,
+    parent,
+    trackDiv: undefined,
+  };
+  player.playButton.addEventListener("click", playButtonCallback);
+  addTrackDiv(player);
+  playerCount++;
+  return player;
+}
+
+function addTrackDiv(player: Player) {
+  const tracksDiv = document.createElement("div");
+  tracksDiv.classList.add("row");
+  tracksDiv.classList.add("g-5");
+  times(player.tracks.length, (i) => {
     const canvas = document.createElement("canvas");
     canvas.style.border = "solid";
     const input = document.createElement("input");
@@ -57,21 +122,18 @@ export function get(
     input.classList.add("form-control");
     const p = document.createElement("p");
     p.appendChild(canvas);
-    p.appendChild(document.createElement("br"));
     p.appendChild(input);
-    parent.appendChild(p);
-    const t = tracks[i];
+    tracksDiv.appendChild(p);
+    const t = player.tracks[i];
     t.canvas = canvas;
     t.mmlInput = input;
   });
-  const player: Player = {
-    tracks,
-    notesStepsCount: 0,
-    isPlaying: false,
-    playButton,
-  };
-  player.playButton.addEventListener("click", playButtonCallback);
-  return player;
+  if (player.trackDiv != null) {
+    player.parent.replaceChild(tracksDiv, player.trackDiv);
+  } else {
+    player.parent.appendChild(tracksDiv);
+  }
+  player.trackDiv = tracksDiv;
 }
 
 export function setMmlStrings(player: Player, mmlStrings: string[]) {
@@ -88,7 +150,7 @@ export function setSequences(player: Player, sequences) {
   setTotalTimeAndVisualizer(player);
 }
 
-export function setTrackSound(
+export function setTrackSounds(
   player: Player,
   trackSounds: { soundEffect: soundEffect.SoundEffect; isDrum: boolean }[]
 ) {
@@ -112,12 +174,17 @@ export async function play(player: Player) {
     return;
   }
   player.isPlaying = true;
-  part.init(player.notesStepsCount);
-  player.tracks.forEach((t) => {
-    t.part = part.add(t.sequence, t.soundEffect, t.isDrum, t.visualizer);
-  });
+  createParts(player);
   part.play();
   player.playButton.textContent = "Stop";
+}
+
+function createParts(player: Player) {
+  part.init(player.notesStepsCount);
+  player.tracks.forEach((t) => {
+    t.part = part.add(t.mml, t.sequence, t.soundEffect, t.isDrum, t.visualizer);
+  });
+  player.stateTextInput.value = JSON.stringify(toJSON(player));
 }
 
 export function stop(player: Player) {
@@ -342,4 +409,28 @@ function getVisualizer(seq, canvas: HTMLCanvasElement, noteRGB: string) {
     noteSpacing: 1,
     pixelsPerTimeStep: 87,
   });
+}
+
+export function toJSON(player: Player) {
+  return {
+    parts: player.tracks.map((t) => part.toJson(t.part)),
+    notesStepsCount: player.notesStepsCount,
+  };
+}
+
+export function fromJSON(player: Player, json) {
+  addTrackDiv(player);
+  const parts: part.Part[] = json.parts.map((p) =>
+    part.fromJSON(p, mmlToSequence)
+  );
+  const mmlStrings = parts.map((p) => p.mml);
+  setMmlStrings(player, mmlStrings);
+  const tracksSounds = parts.map((p) => {
+    return {
+      soundEffect: p.soundEffect,
+      isDrum: p.isDrum,
+    };
+  });
+  setTrackSounds(player, tracksSounds);
+  player.notesStepsCount = json.notesStepsCount;
 }

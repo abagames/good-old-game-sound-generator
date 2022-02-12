@@ -5,6 +5,8 @@ import { getQuantizedTime, times } from "./util";
 
 export type SoundEffect = {
   type: Type;
+  params;
+  volume: number;
   buffers: AudioBuffer[];
   bufferSourceNodes: AudioBufferSourceNode[];
   gainNode: GainNode;
@@ -67,7 +69,7 @@ export function get(
   attackRatio: number = 1,
   sustainRatio: number = 1
 ): SoundEffect {
-  const buffers = times(count, (i) => {
+  const params = times(count, (i) => {
     random.setSeed(seed + i * 1063);
     let p = new Params();
     p[typeFunctionNames[type]]();
@@ -76,28 +78,13 @@ export function get(
     }
     p.p_env_attack *= attackRatio;
     p.p_env_sustain *= sustainRatio;
-    const s = new SoundEffect(p).generate();
-    if (s.buffer.length === 0) {
-      return audioContext.createBuffer(1, 1, s.sampleRate);
-    }
-    const buffer = audioContext.createBuffer(1, s.buffer.length, s.sampleRate);
-    var channelData = buffer.getChannelData(0);
-    channelData.set(s.buffer);
-    return buffer;
+    return p;
   });
-  const gainNode = audioContext.createGain();
-  gainNode.gain.value = volume;
-  gainNode.connect(audioContext.destination);
-  const se = {
-    type,
-    buffers,
-    bufferSource: undefined,
-    gainNode,
-    isPlaying: false,
-    playedTime: undefined,
-  };
-  soundEffects.push(se);
-  return se;
+  return fromJSON({ type, params, volume });
+}
+
+export function remove(tse: SoundEffect) {
+  soundEffects = soundEffects.filter((se) => se !== tse);
 }
 
 function playSoundEffect(soundEffect: SoundEffect) {
@@ -147,4 +134,43 @@ export function stop(soundEffect: SoundEffect, when: number = undefined) {
     });
     soundEffect.bufferSourceNodes = undefined;
   }
+}
+
+export function toJson(soundEffect: SoundEffect) {
+  return {
+    type: soundEffect.type,
+    params: soundEffect.params,
+    volume: soundEffect.volume,
+  };
+}
+
+export function fromJSON(json): SoundEffect {
+  const type = json.type;
+  const params = json.params;
+  const volume = json.volume;
+  const buffers = params.map((p) => {
+    const s = new SoundEffect(p).generate();
+    if (s.buffer.length === 0) {
+      return audioContext.createBuffer(1, 1, s.sampleRate);
+    }
+    const buffer = audioContext.createBuffer(1, s.buffer.length, s.sampleRate);
+    var channelData = buffer.getChannelData(0);
+    channelData.set(s.buffer);
+    return buffer;
+  });
+  const gainNode = audioContext.createGain();
+  gainNode.gain.value = volume;
+  gainNode.connect(audioContext.destination);
+  const se = {
+    type,
+    params,
+    volume,
+    buffers,
+    bufferSource: undefined,
+    gainNode,
+    isPlaying: false,
+    playedTime: undefined,
+  };
+  soundEffects.push(se);
+  return se;
 }

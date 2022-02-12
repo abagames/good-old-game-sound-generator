@@ -77,7 +77,7 @@ async function generate(seed: number) {
     );
     generatedSequences = generatedSequences.concat(generatedDrumSequences);
   }
-  player.setTrackSound(
+  player.setTrackSounds(
     generatedPlayer,
     generatedSequences.map((s, i) => {
       const isDrum = i > 1;
@@ -130,7 +130,7 @@ function init() {
   generator.init();
   generatedPlayer = player.get(
     melodyTrackCount + drumTrackCount,
-    document.getElementById("generated"),
+    document.getElementById("main"),
     () => {
       player.stop(originPlayer);
       player.playStopToggle(generatedPlayer);
@@ -138,7 +138,7 @@ function init() {
   );
   originPlayer = player.get(
     melodyTrackCount + drumTrackCount,
-    document.getElementById("origin"),
+    document.getElementById("main"),
     () => {
       player.stop(generatedPlayer);
       player.playStopToggle(originPlayer);
@@ -152,7 +152,7 @@ function init() {
     "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr",
     "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr",
   ];
-  player.setTrackSound(
+  player.setTrackSounds(
     originPlayer,
     times(mmlStrings.length, (i) => {
       const isDrum = i >= melodyTrackCount;
