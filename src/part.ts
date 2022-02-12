@@ -14,6 +14,7 @@ export type Part = {
   soundEffect: soundEffect.SoundEffect;
   isDrum: boolean;
   noteIndex: number;
+  endStep: number;
   visualizer?;
 };
 
@@ -40,6 +41,7 @@ export function add(
     soundEffect,
     isDrum,
     noteIndex: 0,
+    endStep: -1,
     visualizer,
   };
   parts.push(p);
@@ -91,7 +93,7 @@ function updatePart(p: Part, time: number) {
   }
   if (
     (p.soundEffect.type === "synth" || p.soundEffect.type === "tone") &&
-    n.quantizedEndStep === notesStepsIndex
+    p.endStep === notesStepsIndex
   ) {
     soundEffect.stop(p.soundEffect, time);
   }
@@ -108,6 +110,10 @@ function updatePart(p: Part, time: number) {
   }
   if (p.visualizer != null) {
     p.visualizer.redraw(n);
+  }
+  p.endStep = n.quantizedEndStep;
+  if (p.endStep >= notesStepsCount) {
+    p.endStep -= notesStepsCount;
   }
   p.noteIndex++;
   if (p.noteIndex >= p.sequence.notes.length) {
