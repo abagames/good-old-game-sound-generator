@@ -423,7 +423,7 @@ export function toJSON(player: Player) {
 }
 
 export function fromJSON(player: Player, json) {
-  addTrackDiv(player);
+  setTrackCount(player, json.parts.length);
   const parts: part.Part[] = json.parts.map((p) =>
     part.fromJSON(p, mmlToSequence)
   );
