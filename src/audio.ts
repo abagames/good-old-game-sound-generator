@@ -13,11 +13,12 @@ export function init(_audioContext: AudioContext = undefined) {
   quantize = 0.5;
 }
 
-export async function start() {
+export function start() {
   if (isStarted) {
     return;
   }
   isStarted = true;
+  audioContext.resume();
   playEmptyBuffer();
 }
 

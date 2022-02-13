@@ -169,8 +169,8 @@ export function playStopToggle(player: Player) {
   (player.isPlaying ? stop : play)(player);
 }
 
-export async function play(player: Player) {
-  await startAudio();
+export function play(player: Player) {
+  startAudio();
   if (player.isPlaying) {
     return;
   }
