@@ -3,20 +3,17 @@ import * as soundEffect from "./soundEffect";
 import * as part from "./part";
 import * as player from "./player";
 import * as generator from "./generator";
-import { cloneDeep, times } from "./util";
+import { cloneDeep } from "./util";
 import { Random, random } from "./random";
 
 const seedRandom = new Random();
 let originPlayer: player.Player;
 let generatedPlayer: player.Player;
-let soundEffects: { [key: string]: soundEffect.SoundEffect };
 let progressBar: HTMLDivElement;
 let seedTextInput: HTMLInputElement;
 let generatedStepsCountTextInput: HTMLInputElement;
 
 const defaultGeneratedNotesStepsCount = 64;
-const melodyTrackCount = 2;
-const drumTrackCount = 4;
 
 function update() {
   requestAnimationFrame(update);
@@ -39,16 +36,33 @@ async function generate(seed: number) {
     generatedStepsCountTextInput.value = `${generatedNotesStepsCount}`;
   }
   const tracks = originPlayer.tracks;
-  const sequences = [];
-  for (let i = 0; i < melodyTrackCount; i++) {
-    if (i >= tracks.length) {
-      break;
+  const melodySequences = [];
+  const drumSequences = [];
+  let tmpDrumSequences = [];
+  const drumTrackCounts = [];
+  tracks.forEach((t) => {
+    if (t.isDrum) {
+      tmpDrumSequences.push(cloneDeep(t.sequence));
+      if (tmpDrumSequences.length === 4) {
+        drumSequences.push(
+          generator.drumSequencesToPitchSequence(tmpDrumSequences)
+        );
+        drumTrackCounts.push(4);
+        tmpDrumSequences = [];
+      }
+    } else {
+      melodySequences.push(cloneDeep(t.sequence));
     }
-    sequences.push(cloneDeep(tracks[i].sequence));
+  });
+  if (tmpDrumSequences.length > 0) {
+    drumSequences.push(
+      generator.drumSequencesToPitchSequence(tmpDrumSequences)
+    );
+    drumTrackCounts.push(tmpDrumSequences.length);
   }
-  let generatedSequences = await generator.generate(
+  let generatedMelodySequences = await generator.generate(
     seed,
-    sequences,
+    melodySequences,
     2,
     0.99,
     true,
@@ -56,31 +70,35 @@ async function generate(seed: number) {
     generatedNotesStepsCount,
     progressBar
   );
-  if (originPlayer.tracks.length > melodyTrackCount) {
-    const drumSequences = [];
-    for (let i = melodyTrackCount; i < tracks.length; i++) {
-      drumSequences.push(cloneDeep(tracks[i].sequence));
-    }
-    let generatedDrumPitchSequences = await generator.generate(
-      seed,
-      [generator.drumSequencesToPitchSequence(drumSequences)],
-      2,
-      0.99,
-      false,
-      true,
-      generatedNotesStepsCount,
-      progressBar
-    );
-    const generatedDrumSequences = generator.pitchSequenceToDrumSequences(
-      generatedDrumPitchSequences[0],
-      originPlayer.tracks.length - 2
-    );
-    generatedSequences = generatedSequences.concat(generatedDrumSequences);
-  }
+  let generatedDrumPitchSequences = await generator.generate(
+    seed,
+    drumSequences,
+    2,
+    0.99,
+    false,
+    true,
+    generatedNotesStepsCount,
+    progressBar
+  );
+  let generatedDrumSequences = generatedDrumPitchSequences
+    .map((dp, i) =>
+      generator.pitchSequenceToDrumSequences(dp, drumTrackCounts[i])
+    )
+    .flat();
+  generatedMelodySequences = generatedMelodySequences.filter(
+    (s) => s.notes.length > 0
+  );
+  generatedDrumSequences = generatedDrumSequences.filter(
+    (s) => s.notes.length > 0
+  );
+  const generatedSequences = generatedMelodySequences.concat(
+    generatedDrumSequences
+  );
+  player.setTrackCount(generatedPlayer, generatedSequences.length);
   player.setTrackSounds(
     generatedPlayer,
     generatedSequences.map((s, i) => {
-      const isDrum = i > 1;
+      const isDrum = i >= generatedMelodySequences.length;
       let se: soundEffect.SoundEffect;
       if (isDrum) {
         const t = random.select(["hit", "click", "explosion"]);
@@ -128,34 +146,30 @@ function init() {
   initAudio();
   soundEffect.init();
   generator.init();
-  generatedPlayer = player.get(
-    melodyTrackCount + drumTrackCount,
-    document.getElementById("main"),
-    () => {
-      player.stop(originPlayer);
-      player.playStopToggle(generatedPlayer);
-    }
-  );
+  const defaultTracks = [
+    { mml: "l16 o4 r>c2. r8c r<a+2. r8a+", isDrum: false },
+    { mml: "l16 o4 fc+fg8c8g8 c8fgcfg fcfg8c8f8 c8ffcfg", isDrum: false },
+    { mml: "l16 o4 crrr crrr crrr crrr crrr crrr crrr crrr", isDrum: true },
+    { mml: "l16 o4 rrrr crrr rrrr crrr rrrr crrr rrrr crrr", isDrum: true },
+    { mml: "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr", isDrum: true },
+    { mml: "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr", isDrum: true },
+  ];
+  generatedPlayer = player.get(1, document.getElementById("main"), () => {
+    player.stop(originPlayer);
+    player.playStopToggle(generatedPlayer);
+  });
   originPlayer = player.get(
-    melodyTrackCount + drumTrackCount,
+    defaultTracks.length,
     document.getElementById("main"),
     () => {
       player.stop(generatedPlayer);
       player.playStopToggle(originPlayer);
     }
   );
-  const mmlStrings = [
-    "l16 o4 r>c2. r8c r<a+2. r8a+",
-    "l16 o4 fc+fg8c8g8 c8fgcfg fcfg8c8f8 c8ffcfg",
-    "l16 o4 crrr crrr crrr crrr crrr crrr crrr crrr",
-    "l16 o4 rrrr crrr rrrr crrr rrrr crrr rrrr crrr",
-    "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr",
-    "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr",
-  ];
   player.setTrackSounds(
     originPlayer,
-    times(mmlStrings.length, (i) => {
-      const isDrum = i >= melodyTrackCount;
+    defaultTracks.map((t) => {
+      const isDrum = t.isDrum;
       return {
         soundEffect: isDrum
           ? soundEffect.get("hit", 1, 2, 0.1)
@@ -164,11 +178,10 @@ function init() {
       };
     })
   );
-  player.setMmlStrings(originPlayer, mmlStrings);
-  soundEffects = {};
-  soundEffect.types.forEach((t) => {
-    soundEffects[t] = soundEffect.get(t, 5);
-  });
+  player.setMmlStrings(
+    originPlayer,
+    defaultTracks.map((t) => t.mml)
+  );
   seedTextInput = document.getElementById("random_seed") as HTMLInputElement;
   document.getElementById("generate").addEventListener("click", () => {
     const seed = seedRandom.getInt(999999999);

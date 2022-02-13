@@ -36,18 +36,6 @@ export function get(
   parent: HTMLElement,
   playButtonCallback: () => void
 ): Player {
-  const tracks: Track[] = times(trackCount, () => {
-    return {
-      mml: undefined,
-      sequence: undefined,
-      soundEffect: undefined,
-      isDrum: undefined,
-      part: undefined,
-      visualizer: [],
-      canvas: [],
-      mmlInput: [],
-    };
-  });
   const stateDiv = document.createElement("div");
   stateDiv.classList.add("row");
   stateDiv.classList.add("g-5");
@@ -94,7 +82,7 @@ export function get(
       navigator.clipboard.writeText(player.stateTextInput.value);
     });
   const player: Player = {
-    tracks,
+    tracks: undefined,
     notesStepsCount: 0,
     isPlaying: false,
     playButton: document.getElementById(
@@ -104,10 +92,26 @@ export function get(
     parent,
     trackDiv: undefined,
   };
+  setTrackCount(player, trackCount);
   player.playButton.addEventListener("click", playButtonCallback);
-  addTrackDiv(player);
   playerCount++;
   return player;
+}
+
+export function setTrackCount(player: Player, trackCount: number) {
+  player.tracks = times(trackCount, () => {
+    return {
+      mml: undefined,
+      sequence: undefined,
+      soundEffect: undefined,
+      isDrum: undefined,
+      part: undefined,
+      visualizer: [],
+      canvas: [],
+      mmlInput: [],
+    };
+  });
+  addTrackDiv(player);
 }
 
 function addTrackDiv(player: Player) {
