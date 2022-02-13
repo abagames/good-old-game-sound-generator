@@ -10,7 +10,6 @@ const seedRandom = new Random();
 let originPlayer: player.Player;
 let generatedPlayer: player.Player;
 let progressBar: HTMLDivElement;
-let seedTextInput: HTMLInputElement;
 let generatedStepsCountTextInput: HTMLInputElement;
 
 const defaultGeneratedNotesStepsCount = 64;
@@ -181,18 +180,10 @@ function init() {
     originPlayer,
     defaultTracks.map((t) => t.mml)
   );
-  seedTextInput = document.getElementById("random_seed") as HTMLInputElement;
   document.getElementById("generate").addEventListener("click", () => {
     const seed = seedRandom.getInt(999999999);
-    seedTextInput.value = `${seed}`;
     setTimeout(() => generate(seed), 0);
   });
-  document
-    .getElementById("generate_from_seed")
-    .addEventListener("click", () => {
-      const seed = Number.parseInt(seedTextInput.value);
-      setTimeout(() => generate(seed), 0);
-    });
   generatedStepsCountTextInput = document.getElementById(
     "generated_steps_count"
   ) as HTMLInputElement;
