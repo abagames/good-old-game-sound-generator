@@ -156,7 +156,7 @@ function init() {
     { mml: "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr", isDrum: true },
     { mml: "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr", isDrum: true },
   ];
-  generatedPlayer = player.get(1, document.getElementById("main"), () => {
+  generatedPlayer = player.get(0, document.getElementById("main"), () => {
     player.stop(originPlayer);
     player.playStopToggle(generatedPlayer);
   });

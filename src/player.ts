@@ -36,6 +36,7 @@ export function get(
   parent: HTMLElement,
   playButtonCallback: () => void
 ): Player {
+  parent.appendChild(document.createElement("hr"));
   const stateDiv = document.createElement("div");
   stateDiv.classList.add("row");
   stateDiv.classList.add("g-5");
@@ -117,17 +118,20 @@ export function setTrackCount(player: Player, trackCount: number) {
 function addTrackDiv(player: Player) {
   const tracksDiv = document.createElement("div");
   tracksDiv.classList.add("row");
-  tracksDiv.classList.add("g-5");
+  tracksDiv.classList.add("g-2");
   times(player.tracks.length, (i) => {
     const canvas = document.createElement("canvas");
     canvas.style.border = "solid";
     const input = document.createElement("input");
     input.type = "text";
     input.classList.add("form-control");
-    const p = document.createElement("p");
-    p.appendChild(canvas);
-    p.appendChild(input);
-    tracksDiv.appendChild(p);
+    const canvasDiv = document.createElement("div");
+    canvasDiv.classList.add("col-md-12");
+    canvasDiv.appendChild(canvas);
+    tracksDiv.appendChild(canvasDiv);
+    const inputDiv = document.createElement("div");
+    inputDiv.appendChild(input);
+    tracksDiv.appendChild(inputDiv);
     const t = player.tracks[i];
     t.canvas = canvas;
     t.mmlInput = input;
