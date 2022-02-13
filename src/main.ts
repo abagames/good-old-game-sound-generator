@@ -111,7 +111,9 @@ async function generate(seed: number) {
       } else {
         const al = calcNoteLengthAverage(s);
         const t =
-          random.get() < 1 / al ? "select" : random.select(["synth", "tone"]);
+          random.get() < 1 / al
+            ? "select"
+            : random.select(["tone", "tone", "synth"]);
         se = soundEffect.get(
           t,
           random.getInt(999999999),
