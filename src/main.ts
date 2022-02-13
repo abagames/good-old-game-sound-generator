@@ -101,7 +101,7 @@ async function generate(seed: number) {
       const isDrum = i >= generatedMelodySequences.length;
       let se: soundEffect.SoundEffect;
       if (isDrum) {
-        const t = random.select(["hit", "click", "explosion"]);
+        const t = random.select(["hit", "hit<", "click", "click", "explosion"]);
         se = soundEffect.get(
           t,
           random.getInt(999999999),
