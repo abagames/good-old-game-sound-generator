@@ -24,7 +24,7 @@ export type Player = {
   playButton: HTMLButtonElement;
   stateTextInput: HTMLInputElement;
   parent: HTMLElement;
-  trackDiv: HTMLDivElement;
+  tracksDiv: HTMLDivElement;
 };
 
 const timePerStep = 0.125;
@@ -32,7 +32,6 @@ const stepsPerQuarter = 4;
 let playerCount = 0;
 
 export function get(
-  trackCount: number,
   parent: HTMLElement,
   playButtonCallback: () => void
 ): Player {
@@ -67,6 +66,10 @@ export function get(
   `;
   parent.appendChild(stateDiv);
   parent.appendChild(document.createElement("br"));
+  const tracksDiv = document.createElement("div") as HTMLDivElement;
+  tracksDiv.classList.add("row");
+  tracksDiv.classList.add("g-2");
+  parent.appendChild(tracksDiv);
   const stateTextInput = document.getElementById(
     `state_text_${playerCount}`
   ) as HTMLInputElement;
@@ -91,9 +94,8 @@ export function get(
     ) as HTMLInputElement,
     stateTextInput,
     parent,
-    trackDiv: undefined,
+    tracksDiv,
   };
-  setTrackCount(player, trackCount);
   player.playButton.addEventListener("click", playButtonCallback);
   playerCount++;
   return player;
@@ -116,7 +118,7 @@ export function setTrackCount(player: Player, trackCount: number) {
 }
 
 function addTrackDiv(player: Player) {
-  const tracksDiv = document.createElement("div");
+  const tracksDiv = document.createElement("div") as HTMLDivElement;
   tracksDiv.classList.add("row");
   tracksDiv.classList.add("g-2");
   times(player.tracks.length, (i) => {
@@ -136,12 +138,8 @@ function addTrackDiv(player: Player) {
     t.canvas = canvas;
     t.mmlInput = input;
   });
-  if (player.trackDiv != null) {
-    player.parent.replaceChild(tracksDiv, player.trackDiv);
-  } else {
-    player.parent.appendChild(tracksDiv);
-  }
-  player.trackDiv = tracksDiv;
+  player.parent.replaceChild(tracksDiv, player.tracksDiv);
+  player.tracksDiv = tracksDiv;
 }
 
 export function setMmlStrings(player: Player, mmlStrings: string[]) {

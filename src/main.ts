@@ -156,18 +156,15 @@ function init() {
     { mml: "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr", isDrum: true },
     { mml: "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr", isDrum: true },
   ];
-  generatedPlayer = player.get(0, document.getElementById("main"), () => {
+  generatedPlayer = player.get(document.getElementById("main"), () => {
     player.stop(originPlayer);
     player.playStopToggle(generatedPlayer);
   });
-  originPlayer = player.get(
-    defaultTracks.length,
-    document.getElementById("main"),
-    () => {
-      player.stop(generatedPlayer);
-      player.playStopToggle(originPlayer);
-    }
-  );
+  originPlayer = player.get(document.getElementById("main"), () => {
+    player.stop(generatedPlayer);
+    player.playStopToggle(originPlayer);
+  });
+  player.setTrackCount(originPlayer, defaultTracks.length);
   player.setTrackSounds(
     originPlayer,
     defaultTracks.map((t) => {
