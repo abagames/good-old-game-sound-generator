@@ -15,6 +15,7 @@ export type Track = {
   visualizer;
   canvas: HTMLCanvasElement;
   mmlInput: HTMLInputElement;
+  drumCheckbox: HTMLInputElement;
 };
 
 export type Player = {
@@ -102,7 +103,7 @@ export function get(
 }
 
 const emptyTrack = {
-  mml: undefined,
+  mml: "",
   sequence: undefined,
   soundEffect: undefined,
   isDrum: undefined,
@@ -115,6 +116,47 @@ const emptyTrack = {
 export function setTrackCount(player: Player, trackCount: number) {
   player.tracks = times(trackCount, () => cloneDeep(emptyTrack));
   addTrackDiv(player);
+}
+
+function insertTrack(player: Player, index: number) {
+  const t: Track = cloneDeep(emptyTrack);
+  t.isDrum = player.tracks[index].isDrum;
+  t.soundEffect = t.isDrum
+    ? soundEffect.get("hit", 1, 2, 0.1)
+    : soundEffect.get("select", 1, 2, 0.1, 0.35173364);
+  player.tracks.splice(index + 1, 0, t);
+  addTrackDiv(player);
+  t.drumCheckbox.checked = t.isDrum;
+  setMmlStrings(
+    player,
+    player.tracks.map((t) => t.mml)
+  );
+}
+
+function removeTrack(player: Player, index: number) {
+  if (player.tracks.length === 1) {
+    return;
+  }
+  player.tracks.splice(index, 1);
+  addTrackDiv(player);
+  setMmlStrings(
+    player,
+    player.tracks.map((t) => t.mml)
+  );
+}
+
+function toggleDrum(player: Player, index: number) {
+  const t = player.tracks[index];
+  t.isDrum = !t.isDrum;
+  t.soundEffect = t.isDrum
+    ? soundEffect.get("hit", 1, 2, 0.1)
+    : soundEffect.get("select", 1, 2, 0.1, 0.35173364);
+  addTrackDiv(player);
+  t.drumCheckbox.checked = t.isDrum;
+  setMmlStrings(
+    player,
+    player.tracks.map((t) => t.mml)
+  );
 }
 
 function addTrackDiv(player: Player) {
@@ -132,8 +174,48 @@ function addTrackDiv(player: Player) {
     canvasDiv.appendChild(canvas);
     tracksDiv.appendChild(canvasDiv);
     const inputDiv = document.createElement("div");
+    inputDiv.classList.add("col-md-8");
     inputDiv.appendChild(input);
     tracksDiv.appendChild(inputDiv);
+    const drumDiv = document.createElement("div");
+    drumDiv.classList.add("col-md-2");
+    drumDiv.classList.add("form-check");
+    const drumCheckbox = document.createElement("input");
+    drumCheckbox.classList.add("form-check-input");
+    drumCheckbox.type = "checkbox";
+    drumCheckbox.checked = player.tracks[i].isDrum;
+    drumCheckbox.addEventListener("click", () => {
+      toggleDrum(player, i);
+    });
+    drumDiv.appendChild(drumCheckbox);
+    player.tracks[i].drumCheckbox = drumCheckbox;
+    const label = document.createElement("label");
+    label.classList.add("form-check-label");
+    label.textContent = "Drum";
+    drumDiv.appendChild(label);
+    tracksDiv.appendChild(drumDiv);
+    const addDiv = document.createElement("div");
+    addDiv.classList.add("col-md-1");
+    const addButton = document.createElement("button");
+    addButton.classList.add("btn");
+    addButton.classList.add("btn-primary");
+    addButton.textContent = "Add";
+    addButton.addEventListener("click", () => {
+      insertTrack(player, i);
+    });
+    addDiv.appendChild(addButton);
+    tracksDiv.appendChild(addDiv);
+    const removeDiv = document.createElement("div");
+    removeDiv.classList.add("col-md-1");
+    const removeButton = document.createElement("button");
+    removeButton.classList.add("btn");
+    removeButton.classList.add("btn-primary");
+    removeButton.textContent = "Remove";
+    removeButton.addEventListener("click", () => {
+      removeTrack(player, i);
+    });
+    removeDiv.appendChild(removeButton);
+    tracksDiv.appendChild(removeDiv);
     const t = player.tracks[i];
     t.canvas = canvas;
     t.mmlInput = input;
@@ -164,6 +246,7 @@ export function setTrackSounds(
     const ts = trackSounds[i];
     t.soundEffect = ts.soundEffect;
     t.isDrum = ts.isDrum;
+    t.drumCheckbox.checked = t.isDrum;
   });
 }
 
