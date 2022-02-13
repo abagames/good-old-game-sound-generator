@@ -116,8 +116,8 @@ async function generate(seed: number) {
         se = soundEffect.get(
           t,
           random.getInt(999999999),
-          t === "tone" ? 1 : 2,
-          t === "tone" ? 0.2 : 0.05,
+          t !== "select" ? 1 : 2,
+          t === "tone" ? 0.2 : t === "synth" ? 0.1 : 0.05,
           0.35173364,
           t !== "select" ? 0.1 : 1,
           t !== "select" ? 2 : 1
@@ -171,7 +171,7 @@ function init() {
       return {
         soundEffect: isDrum
           ? soundEffect.get("hit", 1, 2, 0.1)
-          : soundEffect.get("select", 1, 2, 0.1, 0.35173364),
+          : soundEffect.get("select", 1, 2, 0.05, 0.35173364),
         isDrum,
       };
     })

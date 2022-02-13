@@ -5,6 +5,7 @@ import MMLIterator from "mml-iterator";
 import { cloneDeep, times } from "./util";
 import * as part from "./part";
 import * as soundEffect from "./soundEffect";
+import { random } from "./random";
 
 export type Track = {
   mml: string;
@@ -122,8 +123,8 @@ function insertTrack(player: Player, index: number) {
   const t: Track = cloneDeep(emptyTrack);
   t.isDrum = player.tracks[index].isDrum;
   t.soundEffect = t.isDrum
-    ? soundEffect.get("hit", 1, 2, 0.1)
-    : soundEffect.get("select", 1, 2, 0.1, 0.35173364);
+    ? soundEffect.get("hit", random.getInt(999999999), 2, 0.1)
+    : soundEffect.get("select", random.getInt(999999999), 2, 0.05, 0.35173364);
   player.tracks.splice(index + 1, 0, t);
   addTrackDiv(player);
   t.drumCheckbox.checked = t.isDrum;
@@ -149,8 +150,8 @@ function toggleDrum(player: Player, index: number) {
   const t = player.tracks[index];
   t.isDrum = !t.isDrum;
   t.soundEffect = t.isDrum
-    ? soundEffect.get("hit", 1, 2, 0.1)
-    : soundEffect.get("select", 1, 2, 0.1, 0.35173364);
+    ? soundEffect.get("hit", random.getInt(999999999), 2, 0.1)
+    : soundEffect.get("select", random.getInt(999999999), 2, 0.05, 0.35173364);
   addTrackDiv(player);
   t.drumCheckbox.checked = t.isDrum;
   setMmlStrings(
