@@ -216,6 +216,7 @@ function addTrackDiv(player: Player) {
     });
     removeDiv.appendChild(removeButton);
     tracksDiv.appendChild(removeDiv);
+    tracksDiv.appendChild(document.createElement("hr"));
     const t = player.tracks[i];
     t.canvas = canvas;
     t.mmlInput = input;
