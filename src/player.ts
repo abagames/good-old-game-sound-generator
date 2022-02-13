@@ -2,7 +2,7 @@ import "../lib/magenta/music";
 declare const mm: any;
 import { start as startAudio } from "./audio";
 import MMLIterator from "mml-iterator";
-import { times } from "./util";
+import { cloneDeep, times } from "./util";
 import * as part from "./part";
 import * as soundEffect from "./soundEffect";
 
@@ -98,19 +98,19 @@ export function get(
   return player;
 }
 
+const emptyTrack = {
+  mml: undefined,
+  sequence: undefined,
+  soundEffect: undefined,
+  isDrum: undefined,
+  part: undefined,
+  visualizer: [],
+  canvas: [],
+  mmlInput: [],
+};
+
 export function setTrackCount(player: Player, trackCount: number) {
-  player.tracks = times(trackCount, () => {
-    return {
-      mml: undefined,
-      sequence: undefined,
-      soundEffect: undefined,
-      isDrum: undefined,
-      part: undefined,
-      visualizer: [],
-      canvas: [],
-      mmlInput: [],
-    };
-  });
+  player.tracks = times(trackCount, () => cloneDeep(emptyTrack));
   addTrackDiv(player);
 }
 
