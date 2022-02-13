@@ -228,7 +228,7 @@ export function setMmlStrings(player: Player, mmlStrings: string[]) {
   player.tracks.forEach((t, i) => {
     t.mmlInput.value = mmlStrings[i];
   });
-  recreateSequence(player);
+  setFromMmlInputs(player);
 }
 
 export function setSequences(player: Player, sequences) {
@@ -259,9 +259,7 @@ export function play(player: Player) {
   if (player.isPlaying) {
     return;
   }
-  if (!checkMml(player)) {
-    return;
-  }
+  setFromMmlInputs(player);
   player.isPlaying = true;
   createParts(player);
   part.play();
@@ -290,31 +288,12 @@ export function stop(player: Player) {
   player.playButton.textContent = "Play";
 }
 
-function recreateSequence(player: Player) {
+function setFromMmlInputs(player: Player) {
   player.tracks.forEach((t) => {
     t.mml = t.mmlInput.value;
     setSequence(t, createSequence(t.mml));
   });
   setTotalTimeAndVisualizer(player);
-}
-
-function checkMml(player: Player) {
-  let isCleared = true;
-  player.tracks.forEach((t) => {
-    t.mml = t.mmlInput.value;
-    setSequence(t, createSequence(t.mml));
-    if (t.sequence.totalTime > 0 || t.sequence.totalQuantizedSteps > 0) {
-      isCleared = false;
-    }
-  });
-  if (isCleared) {
-    player.tracks.forEach((t) => {
-      t.mml = undefined;
-      t.mmlInput.value = "";
-    });
-  }
-  setTotalTimeAndVisualizer(player);
-  return !isCleared;
 }
 
 function setTotalTimeAndVisualizer(player: Player) {
