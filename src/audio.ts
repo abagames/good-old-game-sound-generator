@@ -9,8 +9,8 @@ export function init(_audioContext: AudioContext = undefined) {
     _audioContext == null
       ? new (window.AudioContext || (window as any).webkitAudioContext)()
       : _audioContext;
-  setTempo(150);
-  quantize = 0.5;
+  setTempo();
+  setQuantize();
 }
 
 export function start() {
@@ -22,9 +22,18 @@ export function start() {
   playEmptyBuffer();
 }
 
-export function setTempo(v: number) {
-  tempo = v;
+export function setTempo(_tempo: number = 150) {
+  tempo = _tempo;
   playInterval = 60 / tempo;
+}
+
+export function setQuantize(noteLength: number = 8) {
+  quantize = 4 / noteLength;
+}
+
+export function getQuantizedTime(time: number) {
+  const interval = playInterval * quantize;
+  return interval > 0 ? Math.ceil(time / interval) * interval : time;
 }
 
 function playEmptyBuffer() {

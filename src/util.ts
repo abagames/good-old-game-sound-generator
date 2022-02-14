@@ -1,20 +1,9 @@
-import { playInterval, quantize } from "./audio";
-
 export function times(n: number, func: Function) {
   let result = [];
   for (let i = 0; i < n; i++) {
     result.push(func(i));
   }
   return result;
-}
-
-export function getQuantizedTime(time: number) {
-  const interval = playInterval * quantize;
-  return interval > 0 ? Math.ceil(time / interval) * interval : time;
-}
-
-export function pitchToFreq(pitch) {
-  return 440 * Math.pow(2, (pitch - 69) / 12);
 }
 
 export function stableSort(values: any[], compareFunc?: Function) {
@@ -31,4 +20,8 @@ export function stableSort(values: any[], compareFunc?: Function) {
 
 export function cloneDeep(o) {
   return { ...o };
+}
+
+export function pitchToFreq(pitch) {
+  return 440 * Math.pow(2, (pitch - 69) / 12);
 }

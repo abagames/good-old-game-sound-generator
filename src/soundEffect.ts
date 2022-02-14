@@ -1,7 +1,7 @@
 import { Params, SoundEffect, setRandomFunction } from "../lib/jsfxr/sfxr";
-import { audioContext } from "./audio";
+import { audioContext, getQuantizedTime } from "./audio";
 import { random } from "./random";
-import { getQuantizedTime, times } from "./util";
+import { times } from "./util";
 
 export type SoundEffect = {
   type: Type;

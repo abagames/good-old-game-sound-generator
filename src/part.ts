@@ -1,5 +1,4 @@
-import { audioContext, playInterval } from "./audio";
-import { getQuantizedTime } from "./util";
+import { audioContext, playInterval, getQuantizedTime } from "./audio";
 import * as soundEffect from "./soundEffect";
 
 export type Part = {
@@ -131,10 +130,10 @@ export function toJson(part: Part) {
   };
 }
 
-export function fromJSON(json, mmlToSequence: Function = undefined): Part {
+export function fromJSON(json, mmlToSequence: Function): Part {
   const p: Part = {
     mml: json.mml,
-    sequence: mmlToSequence(json.mml),
+    sequence: mmlToSequence(json.mml, notesStepsCount),
     soundEffect: soundEffect.fromJSON(json.soundEffect),
     isDrum: json.isDrum,
     noteIndex: 0,
