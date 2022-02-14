@@ -56,7 +56,7 @@ export function remove(tp: Part) {
 export function play() {
   notesStepsIndex = 0;
   noteInterval = playInterval / 2;
-  nextNotesTime = getQuantizedTime(audioContext.currentTime) + noteInterval;
+  nextNotesTime = getQuantizedTime(audioContext.currentTime) - noteInterval;
   parts.forEach((p) => {
     p.noteIndex = 0;
   });
@@ -74,10 +74,14 @@ export function update() {
   if (!isPlaying) {
     return;
   }
-  if (audioContext.currentTime < nextNotesTime) {
+  const currentTime = audioContext.currentTime;
+  if (currentTime < nextNotesTime) {
     return;
   }
   nextNotesTime += noteInterval;
+  if (nextNotesTime < currentTime) {
+    nextNotesTime = getQuantizedTime(currentTime);
+  }
   parts.forEach((p) => {
     updatePart(p, nextNotesTime);
   });
