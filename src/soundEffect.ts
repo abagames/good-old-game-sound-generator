@@ -87,6 +87,10 @@ export function remove(tse: SoundEffect) {
   soundEffects = soundEffects.filter((se) => se !== tse);
 }
 
+export function setVolume(soundEffect: SoundEffect, volume: number) {
+  soundEffect.gainNode.gain.value = volume;
+}
+
 function playSoundEffect(soundEffect: SoundEffect) {
   soundEffect.isPlaying = true;
 }

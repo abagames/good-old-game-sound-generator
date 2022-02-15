@@ -1536,6 +1536,9 @@ function get(type, seed, count = 2, volume = 0.1, freq = void 0, attackRatio = 1
 function remove(tse) {
   soundEffects$1 = soundEffects$1.filter((se) => se !== tse);
 }
+function setVolume(soundEffect, volume) {
+  soundEffect.gainNode.gain.value = volume;
+}
 function playSoundEffect$1(soundEffect) {
   soundEffect.isPlaying = true;
 }
@@ -1622,10 +1625,23 @@ function init$1(_notesStepsCount) {
   parts = [];
   notesStepsCount = _notesStepsCount;
 }
+function add(mml, sequence, soundEffect2, isDrum, visualizer) {
+  const p = {
+    mml,
+    sequence,
+    soundEffect: soundEffect2,
+    isDrum,
+    noteIndex: 0,
+    endStep: -1,
+    visualizer
+  };
+  parts.push(p);
+  return p;
+}
 function play() {
   notesStepsIndex = 0;
   noteInterval = playInterval / 2;
-  nextNotesTime = getQuantizedTime(audioContext.currentTime) + noteInterval;
+  nextNotesTime = getQuantizedTime(audioContext.currentTime) - noteInterval;
   parts.forEach((p) => {
     p.noteIndex = 0;
   });
@@ -1641,10 +1657,14 @@ function update$1() {
   if (!isPlaying) {
     return;
   }
-  if (audioContext.currentTime < nextNotesTime) {
+  const currentTime = audioContext.currentTime;
+  if (currentTime < nextNotesTime) {
     return;
   }
   nextNotesTime += noteInterval;
+  if (nextNotesTime < currentTime) {
+    nextNotesTime = getQuantizedTime(currentTime);
+  }
   parts.forEach((p) => {
     updatePart(p, nextNotesTime);
   });
@@ -1685,7 +1705,7 @@ function updatePart(p, time) {
   }
 }
 function fromJSON(json, mmlToSequence) {
-  const p = {
+  return {
     mml: json.mml,
     sequence: mmlToSequence(json.mml, notesStepsCount),
     soundEffect: fromJSON$1(json.soundEffect),
@@ -1693,16 +1713,16 @@ function fromJSON(json, mmlToSequence) {
     noteIndex: 0,
     endStep: -1
   };
-  parts.push(p);
-  return p;
 }
 const mmlQuantizeInterval = 0.125;
 let baseRandomSeed;
 let soundEffects;
-function playMml(mmlData) {
+function playMml(mmlData, volume = 0.1) {
   init$1(mmlData.notesStepsCount);
-  mmlData.parts.forEach((p) => {
-    fromJSON(p, mmlToQuantizedSequence);
+  mmlData.parts.forEach((dp) => {
+    const p = fromJSON(dp, mmlToQuantizedSequence);
+    setVolume(p.soundEffect, p.soundEffect.volume * volume / 0.2);
+    add(p.mml, p.sequence, p.soundEffect, p.isDrum);
   });
   play();
 }

@@ -23,10 +23,12 @@ export type MmlData = {
   notesStepsCount: number;
 };
 
-export function playMml(mmlData: MmlData) {
+export function playMml(mmlData: MmlData, volume: number = 0.1) {
   part.init(mmlData.notesStepsCount);
-  mmlData.parts.forEach((p) => {
-    part.fromJSON(p, mmlToQuantizedSequence);
+  mmlData.parts.forEach((dp) => {
+    const p = part.fromJSON(dp, mmlToQuantizedSequence);
+    soundEffect.setVolume(p.soundEffect, (p.soundEffect.volume * volume) / 0.2);
+    part.add(p.mml, p.sequence, p.soundEffect, p.isDrum);
   });
   part.play();
 }

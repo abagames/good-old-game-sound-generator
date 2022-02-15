@@ -135,7 +135,7 @@ export function toJson(part: Part) {
 }
 
 export function fromJSON(json, mmlToSequence: Function): Part {
-  const p: Part = {
+  return {
     mml: json.mml,
     sequence: mmlToSequence(json.mml, notesStepsCount),
     soundEffect: soundEffect.fromJSON(json.soundEffect),
@@ -143,6 +143,4 @@ export function fromJSON(json, mmlToSequence: Function): Part {
     noteIndex: 0,
     endStep: -1,
   };
-  parts.push(p);
-  return p;
 }
