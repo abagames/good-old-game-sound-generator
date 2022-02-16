@@ -101,7 +101,7 @@ async function generate(seed: number) {
       let se: soundEffect.SoundEffect;
       if (isDrum) {
         const t = random.select(["hit", "hit", "click", "click", "explosion"]);
-        se = soundEffect.get(
+        se = soundEffect.add(
           t,
           random.getInt(999999999),
           t === "explosion" ? 1 : 2,
@@ -113,7 +113,7 @@ async function generate(seed: number) {
           random.get() < 1 / al
             ? "select"
             : random.select(["tone", "tone", "synth"]);
-        se = soundEffect.get(
+        se = soundEffect.add(
           t,
           random.getInt(999999999),
           t !== "select" ? 1 : 2,
@@ -133,6 +133,7 @@ async function generate(seed: number) {
   progressBar.textContent = "Done.";
   progressBar.style.width = "100%";
   player.play(generatedPlayer);
+  saveToStorage();
 }
 
 function calcNoteLengthAverage(s) {
@@ -143,26 +144,62 @@ function calcNoteLengthAverage(s) {
   return sl / s.notes.length;
 }
 
-function init() {
-  initAudio();
-  soundEffect.init();
-  generator.init();
-  const defaultTracks = [
-    { mml: "l16 o4 r>c2. r8c r<a+2. r8a+", isDrum: false },
-    { mml: "l16 o4 fc+fg8c8g8 c8fgcfg fcfg8c8f8 c8ffcfg", isDrum: false },
-    { mml: "l16 o4 crrr crrr crrr crrr crrr crrr crrr crrr", isDrum: true },
-    { mml: "l16 o4 rrrr crrr rrrr crrr rrrr crrr rrrr crrr", isDrum: true },
-    { mml: "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr", isDrum: true },
-    { mml: "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr", isDrum: true },
-  ];
-  generatedPlayer = player.get(document.getElementById("main"), () => {
-    player.stop(originPlayer);
-    player.playStopToggle(generatedPlayer);
-  });
-  originPlayer = player.get(document.getElementById("main"), () => {
-    player.stop(generatedPlayer);
-    player.playStopToggle(originPlayer);
-  });
+const generatedStepsCountStorageKey = "ggg_steps_count";
+const generatedPlayerStorageKey = "ggg_generated";
+const originPlayerStorageKey = "ggg_origin";
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(
+      generatedStepsCountStorageKey,
+      generatedStepsCountTextInput.value
+    );
+    localStorage.setItem(
+      generatedPlayerStorageKey,
+      generatedPlayer.stateTextInput.value
+    );
+    localStorage.setItem(
+      originPlayerStorageKey,
+      originPlayer.stateTextInput.value
+    );
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+function loadFromStorage() {
+  try {
+    const stepsCount = localStorage.getItem(generatedStepsCountStorageKey);
+    generatedStepsCountTextInput.value =
+      stepsCount == null ? `${defaultGeneratedNotesStepsCount}` : stepsCount;
+    const generatedPlayerJson = localStorage.getItem(generatedPlayerStorageKey);
+    if (generatedPlayerJson != null) {
+      player.fromJSON(generatedPlayer, JSON.parse(generatedPlayerJson));
+      generatedPlayer.stateTextInput.value = generatedPlayerJson;
+    }
+    const originPlayerJson = localStorage.getItem(originPlayerStorageKey);
+    if (originPlayerJson != null) {
+      player.fromJSON(originPlayer, JSON.parse(originPlayerJson));
+      originPlayer.stateTextInput.value = originPlayerJson;
+    } else {
+      setDefaultMml();
+    }
+  } catch (e) {
+    console.log(e);
+    setDefaultMml();
+  }
+}
+
+const defaultTracks = [
+  { mml: "l16 o4 r>c2. r8c r<a+2. r8a+", isDrum: false },
+  { mml: "l16 o4 fc+fg8c8g8 c8fgcfg fcfg8c8f8 c8ffcfg", isDrum: false },
+  { mml: "l16 o4 crrr crrr crrr crrr crrr crrr crrr crrr", isDrum: true },
+  { mml: "l16 o4 rrrr crrr rrrr crrr rrrr crrr rrrr crrr", isDrum: true },
+  { mml: "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr", isDrum: true },
+  { mml: "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr", isDrum: true },
+];
+
+function setDefaultMml() {
   player.setTrackCount(originPlayer, defaultTracks.length);
   player.setTrackSounds(
     originPlayer,
@@ -170,8 +207,8 @@ function init() {
       const isDrum = t.isDrum;
       return {
         soundEffect: isDrum
-          ? soundEffect.get("hit", 1, 2, 0.1)
-          : soundEffect.get("select", 1, 2, 0.05, 0.35173364),
+          ? soundEffect.add("hit", 1, 2, 0.1)
+          : soundEffect.add("select", 1, 2, 0.05, 0.35173364),
         isDrum,
       };
     })
@@ -180,6 +217,22 @@ function init() {
     originPlayer,
     defaultTracks.map((t) => t.mml)
   );
+}
+
+function init() {
+  initAudio();
+  soundEffect.init();
+  generator.init();
+  generatedPlayer = player.get(document.getElementById("main"), () => {
+    player.stop(originPlayer);
+    player.playStopToggle(generatedPlayer);
+    saveToStorage();
+  });
+  originPlayer = player.get(document.getElementById("main"), () => {
+    player.stop(generatedPlayer);
+    player.playStopToggle(originPlayer);
+    saveToStorage();
+  });
   document.getElementById("generate").addEventListener("click", () => {
     const seed = seedRandom.getInt(999999999);
     setTimeout(() => generate(seed), 0);
@@ -187,8 +240,8 @@ function init() {
   generatedStepsCountTextInput = document.getElementById(
     "generated_steps_count"
   ) as HTMLInputElement;
-  generatedStepsCountTextInput.value = `${defaultGeneratedNotesStepsCount}`;
   progressBar = document.getElementById("progress_bar") as HTMLDivElement;
+  loadFromStorage();
   update();
 }
 

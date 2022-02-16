@@ -60,7 +60,7 @@ export function update() {
   });
 }
 
-export function get(
+export function add(
   type: Type,
   seed: number,
   count = 2,
@@ -80,7 +80,9 @@ export function get(
     p.p_env_sustain *= sustainRatio;
     return p;
   });
-  return fromJSON({ type, params, volume });
+  const se = fromJSON({ type, params, volume });
+  soundEffects.push(se);
+  return se;
 }
 
 export function remove(tse: SoundEffect) {
@@ -165,7 +167,7 @@ export function fromJSON(json): SoundEffect {
   const gainNode = audioContext.createGain();
   gainNode.gain.value = volume;
   gainNode.connect(audioContext.destination);
-  const se = {
+  return {
     type,
     params,
     volume,
@@ -175,6 +177,4 @@ export function fromJSON(json): SoundEffect {
     isPlaying: false,
     playedTime: undefined,
   };
-  soundEffects.push(se);
-  return se;
 }

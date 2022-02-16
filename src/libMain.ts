@@ -24,13 +24,12 @@ export type MmlData = {
 };
 
 export function playMml(mmlData: MmlData, volume: number = 0.1) {
-  part.init(mmlData.notesStepsCount);
-  mmlData.parts.forEach((dp) => {
+  const parts: part.Part[] = mmlData.parts.map((dp) => {
     const p = part.fromJSON(dp, mmlToQuantizedSequence);
     soundEffect.setVolume(p.soundEffect, (p.soundEffect.volume * volume) / 0.2);
-    part.add(p.mml, p.sequence, p.soundEffect, p.isDrum);
+    return part.get(p.mml, p.sequence, p.soundEffect, p.isDrum);
   });
-  part.play();
+  part.play(parts, mmlData.notesStepsCount);
 }
 
 export function stopMml() {
@@ -46,7 +45,7 @@ export function playSoundEffect(
 ) {
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;
   if (soundEffects[key] == null) {
-    soundEffects[key] = soundEffect.get(
+    soundEffects[key] = soundEffect.add(
       type,
       seed == null ? baseRandomSeed : seed,
       count,

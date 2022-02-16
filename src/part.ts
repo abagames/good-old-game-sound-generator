@@ -11,31 +11,14 @@ export type Part = {
   visualizer?;
 };
 
-let parts: Part[];
-let notesStepsIndex: number;
-let notesStepsCount: number;
-let nextNotesTime: number;
-let noteInterval: number;
-let isPlaying = false;
-
-export function init(_notesStepsCount: number) {
-  if (parts != null) {
-    parts.forEach((p) => {
-      soundEffect.remove(p.soundEffect);
-    });
-  }
-  parts = [];
-  notesStepsCount = _notesStepsCount;
-}
-
-export function add(
+export function get(
   mml: string,
   sequence,
   soundEffect: soundEffect.SoundEffect,
   isDrum: boolean,
   visualizer?
-) {
-  const p: Part = {
+): Part {
+  return {
     mml,
     sequence,
     soundEffect,
@@ -44,16 +27,37 @@ export function add(
     endStep: -1,
     visualizer,
   };
-  parts.push(p);
-  return p;
 }
 
-export function remove(tp: Part) {
-  soundEffect.remove(tp.soundEffect);
-  parts = parts.filter((p) => p !== tp);
+export function toJson(part: Part) {
+  return {
+    mml: part.mml,
+    soundEffect: soundEffect.toJson(part.soundEffect),
+    isDrum: part.isDrum,
+  };
 }
 
-export function play() {
+export function fromJSON(json, mmlToSequence: Function): Part {
+  return {
+    mml: json.mml,
+    sequence: mmlToSequence(json.mml, notesStepsCount),
+    soundEffect: soundEffect.fromJSON(json.soundEffect),
+    isDrum: json.isDrum,
+    noteIndex: 0,
+    endStep: -1,
+  };
+}
+
+let parts: Part[];
+let notesStepsCount: number;
+let notesStepsIndex: number;
+let noteInterval: number;
+let nextNotesTime: number;
+let isPlaying = false;
+
+export function play(_parts: Part[], _notesStepsCount: number) {
+  parts = _parts;
+  notesStepsCount = _notesStepsCount;
   notesStepsIndex = 0;
   noteInterval = playInterval / 2;
   nextNotesTime = getQuantizedTime(audioContext.currentTime) - noteInterval;
@@ -124,23 +128,4 @@ function updatePart(p: Part, time: number) {
   if (p.noteIndex >= p.sequence.notes.length) {
     p.noteIndex = 0;
   }
-}
-
-export function toJson(part: Part) {
-  return {
-    mml: part.mml,
-    soundEffect: soundEffect.toJson(part.soundEffect),
-    isDrum: part.isDrum,
-  };
-}
-
-export function fromJSON(json, mmlToSequence: Function): Part {
-  return {
-    mml: json.mml,
-    sequence: mmlToSequence(json.mml, notesStepsCount),
-    soundEffect: soundEffect.fromJSON(json.soundEffect),
-    isDrum: json.isDrum,
-    noteIndex: 0,
-    endStep: -1,
-  };
 }

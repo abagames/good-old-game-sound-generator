@@ -84,7 +84,7 @@ export function get(
   document
     .getElementById(`copy_to_clipboard_${playerCount}`)
     .addEventListener("click", () => {
-      createParts(player);
+      player.stateTextInput.value = JSON.stringify(toJSON(player));
       navigator.clipboard.writeText(player.stateTextInput.value);
     });
   const player: Player = {
@@ -123,8 +123,8 @@ function insertTrack(player: Player, index: number) {
   const t: Track = cloneDeep(emptyTrack);
   t.isDrum = player.tracks[index].isDrum;
   t.soundEffect = t.isDrum
-    ? soundEffect.get("hit", random.getInt(999999999), 2, 0.1)
-    : soundEffect.get("select", random.getInt(999999999), 2, 0.05, 0.35173364);
+    ? soundEffect.add("hit", random.getInt(999999999), 2, 0.1)
+    : soundEffect.add("select", random.getInt(999999999), 2, 0.05, 0.35173364);
   player.tracks.splice(index + 1, 0, t);
   addTrackDiv(player);
   t.drumCheckbox.checked = t.isDrum;
@@ -150,8 +150,8 @@ function toggleDrum(player: Player, index: number) {
   const t = player.tracks[index];
   t.isDrum = !t.isDrum;
   t.soundEffect = t.isDrum
-    ? soundEffect.get("hit", random.getInt(999999999), 2, 0.1)
-    : soundEffect.get("select", random.getInt(999999999), 2, 0.05, 0.35173364);
+    ? soundEffect.add("hit", random.getInt(999999999), 2, 0.1)
+    : soundEffect.add("select", random.getInt(999999999), 2, 0.05, 0.35173364);
   addTrackDiv(player);
   t.drumCheckbox.checked = t.isDrum;
   setMmlStrings(
@@ -237,7 +237,7 @@ export function setSequences(player: Player, sequences) {
   player.tracks.forEach((t, i) => {
     setSequence(t, sequences[i]);
   });
-  setTotalTimeAndVisualizer(player);
+  setPartsAndVisualizers(player);
 }
 
 export function setTrackSounds(
@@ -261,19 +261,16 @@ export function play(player: Player) {
   if (player.isPlaying) {
     return;
   }
+  if (player.tracks == null) {
+    return;
+  }
   setFromMmlInputs(player);
   player.isPlaying = true;
-  createParts(player);
-  part.play();
+  part.play(
+    player.tracks.map((t) => t.part),
+    player.notesStepsCount
+  );
   player.playButton.textContent = "Stop";
-}
-
-function createParts(player: Player) {
-  part.init(player.notesStepsCount);
-  player.tracks.forEach((t) => {
-    t.part = part.add(t.mml, t.sequence, t.soundEffect, t.isDrum, t.visualizer);
-  });
-  player.stateTextInput.value = JSON.stringify(toJSON(player));
 }
 
 export function stop(player: Player) {
@@ -295,10 +292,10 @@ function setFromMmlInputs(player: Player) {
     t.mml = t.mmlInput.value;
     setSequence(t, createSequence(t.mml));
   });
-  setTotalTimeAndVisualizer(player);
+  setPartsAndVisualizers(player);
 }
 
-function setTotalTimeAndVisualizer(player: Player) {
+function setPartsAndVisualizers(player: Player) {
   player.notesStepsCount = 0;
   player.tracks.forEach((t) => {
     const stepsCount =
@@ -316,6 +313,10 @@ function setTotalTimeAndVisualizer(player: Player) {
     const rgb = t.isDrum ? "150, 150, 150" : "100, 100, 200";
     t.visualizer = getVisualizer(t.sequence, t.canvas, rgb);
   });
+  player.tracks.forEach((t) => {
+    t.part = part.get(t.mml, t.sequence, t.soundEffect, t.isDrum, t.visualizer);
+  });
+  player.stateTextInput.value = JSON.stringify(toJSON(player));
 }
 
 function setSequence(track: Track, sequence) {
@@ -493,8 +494,6 @@ export function fromJSON(player: Player, json) {
   const parts: part.Part[] = json.parts.map((p) =>
     part.fromJSON(p, mmlToSequence)
   );
-  const mmlStrings = parts.map((p) => p.mml);
-  setMmlStrings(player, mmlStrings);
   const tracksSounds = parts.map((p) => {
     return {
       soundEffect: p.soundEffect,
@@ -502,5 +501,7 @@ export function fromJSON(player: Player, json) {
     };
   });
   setTrackSounds(player, tracksSounds);
+  const mmlStrings = parts.map((p) => p.mml);
+  setMmlStrings(player, mmlStrings);
   player.notesStepsCount = json.notesStepsCount;
 }
