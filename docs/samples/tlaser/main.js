@@ -7,12 +7,12 @@ description = `
 
 characters = [
   `
-  gg
-  gg
-l gg l
-llggll
- lggl
- lggl
+  gG
+  gG
+L gG l
+LLgGll
+ LgGl
+ LgGl
 `,
   `
      r
@@ -54,7 +54,7 @@ function update() {
   if (!ticks) {
     init();
     if (!isReplaying) {
-      ggg.playMml(bgm);
+      ggg.playMml(bgm, 0.07);
     }
     inputPressedPos = vec();
     sight = { pos: vec(50, 50), pressedPos: vec() };
@@ -73,7 +73,7 @@ function update() {
       s.pos.y -= 140;
     }
     // @ts-ignore
-    color(["cyan", "yellow", "red"][i % 3]);
+    color(["light_cyan", "light_yellow", "light_red"][i % 3]);
     rect(s.pos, 1, 1);
   });
   color("black");
@@ -174,7 +174,7 @@ function update() {
       mirror: { y: e.vel.y > 0 ? -1 : 1 },
     }).isColliding;
     if (e === te && c.rect.purple) {
-      ggg.playSoundEffect("hit", 7);
+      ggg.playSoundEffect("hit");
       particle(e.pos, 9, 2 / sqrt(e.z));
       addScore(multiplier, e.pos);
       multiplier++;
@@ -216,7 +216,7 @@ function init() {
     return;
   }
   isInitialized = true;
-  ggg.init(3);
+  ggg.init(11);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
     window.addEventListener(e, () => {
       ggg.startAudio();
@@ -232,33 +232,33 @@ function gameOver() {
 const bgm = {
   parts: [
     {
-      mml: "l4 o3 <bb >d8e4. d8e8g b2 g2 f+2 ee e2",
+      mml: "l8 o4 r16g+2 rg+a+b d+1 >c+2 <b16 r16a+f+f c+2.^8.",
       soundEffect: {
         type: "synth",
         params: [
           {
             oldParams: true,
-            wave_type: 1,
+            wave_type: 0,
             p_env_attack: 0,
-            p_env_sustain: 0.7522013664134316,
-            p_env_punch: 0.74580539989886,
-            p_env_decay: 0.1345223281380074,
+            p_env_sustain: 0.49090752482668204,
+            p_env_punch: 0.945394685246375,
+            p_env_decay: 0.6119192233336901,
             p_base_freq: 0.35173364,
             p_freq_limit: 0,
             p_freq_ramp: 0,
             p_freq_dramp: 0,
             p_vib_strength: 0,
             p_vib_speed: 0,
-            p_arp_mod: 0,
-            p_arp_speed: 0.543213830223124,
-            p_duty: 0.6239351359251736,
-            p_duty_ramp: 0,
+            p_arp_mod: 0.7454,
+            p_arp_speed: 0.6272523117082316,
+            p_duty: 0.677988391993099,
+            p_duty_ramp: 0.5175958854420101,
             p_repeat_speed: 0,
             p_pha_offset: 0,
             p_pha_ramp: 0,
-            p_lpf_freq: 0.20484364967037968,
-            p_lpf_ramp: -0.1541160925184647,
-            p_lpf_resonance: 0.48152642848005667,
+            p_lpf_freq: 1,
+            p_lpf_ramp: 0.9465195052201207,
+            p_lpf_resonance: 0.7178069308208783,
             p_hpf_freq: 0,
             p_hpf_ramp: 0,
             sound_vol: 0.5,
@@ -271,7 +271,7 @@ const bgm = {
       isDrum: false,
     },
     {
-      mml: "l16 o2 >e<bbbbbbe ggaaaa>e<a >ddeer8.g eeeeeeee <gggggggg bbf+bf+f+f+b aaaaaaaa aaaaeaaa",
+      mml: "l16 o4 f+d+8c+4c+8 d+8d+8f8e d+8d+8d+8d+8 g+d+g+d+g+g+g+g+ g+f+c+f+f+<f+>f+8 e8f8f+8f8 fc+c+8c+8c+8 f+c+f+8f+8c+8",
       soundEffect: {
         type: "select",
         params: [
@@ -279,9 +279,9 @@ const bgm = {
             oldParams: true,
             wave_type: 1,
             p_env_attack: 0,
-            p_env_sustain: 0.12872389001509266,
+            p_env_sustain: 0.15881606446551533,
             p_env_punch: 0,
-            p_env_decay: 0.16418133651935063,
+            p_env_decay: 0.1482960673394371,
             p_base_freq: 0.35173364,
             p_freq_limit: 0,
             p_freq_ramp: 0,
@@ -306,11 +306,11 @@ const bgm = {
           },
           {
             oldParams: true,
-            wave_type: 0,
+            wave_type: 1,
             p_env_attack: 0,
-            p_env_sustain: 0.1801292104134637,
+            p_env_sustain: 0.19462825381071966,
             p_env_punch: 0,
-            p_env_decay: 0.0808790894413551,
+            p_env_decay: 0.13410785797380562,
             p_base_freq: 0.35173364,
             p_freq_limit: 0,
             p_freq_ramp: 0,
@@ -319,7 +319,7 @@ const bgm = {
             p_vib_speed: 0,
             p_arp_mod: 0,
             p_arp_speed: 0,
-            p_duty: 0.09718620593128405,
+            p_duty: 1,
             p_duty_ramp: 0,
             p_repeat_speed: 0,
             p_pha_offset: 0,
@@ -341,63 +341,24 @@ const bgm = {
     {
       mml: "l16 o4 cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.c",
       soundEffect: {
-        type: "explosion",
-        params: [
-          {
-            oldParams: true,
-            wave_type: 3,
-            p_env_attack: 0,
-            p_env_sustain: 0.3439296349985361,
-            p_env_punch: 0.2615047691998782,
-            p_env_decay: 0.11910362299976489,
-            p_base_freq: 0.29306843344697764,
-            p_freq_limit: 0,
-            p_freq_ramp: 0,
-            p_freq_dramp: 0,
-            p_vib_strength: 0.32996147457276503,
-            p_vib_speed: 0.012067101339825219,
-            p_arp_mod: 0,
-            p_arp_speed: 0,
-            p_duty: 0,
-            p_duty_ramp: 0,
-            p_repeat_speed: 0.6965959967804598,
-            p_pha_offset: -0.2219698573979479,
-            p_pha_ramp: -0.2989030129040831,
-            p_lpf_freq: 1,
-            p_lpf_ramp: 0,
-            p_lpf_resonance: 0,
-            p_hpf_freq: 0,
-            p_hpf_ramp: 0,
-            sound_vol: 0.5,
-            sample_rate: 44100,
-            sample_size: 8,
-          },
-        ],
-        volume: 0.05,
-      },
-      isDrum: true,
-    },
-    {
-      mml: "l16 o4 r8crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrc",
-      soundEffect: {
         type: "click",
         params: [
           {
             oldParams: true,
             wave_type: 0,
             p_env_attack: 0,
-            p_env_sustain: 0.01608374196013523,
+            p_env_sustain: 0.052304768830608764,
             p_env_punch: 0,
-            p_env_decay: 0.24781649567834485,
-            p_base_freq: 0.8167052814543027,
+            p_env_decay: 0.16039933815142127,
+            p_base_freq: 0.7928503929969972,
             p_freq_limit: 0,
-            p_freq_ramp: -0.5874786259344497,
+            p_freq_ramp: -0.05274250254797341,
             p_freq_dramp: 0,
             p_vib_strength: 0,
             p_vib_speed: 0,
             p_arp_mod: 0,
             p_arp_speed: 0,
-            p_duty: 0.00808409890348187,
+            p_duty: 0.2571233739278101,
             p_duty_ramp: 0,
             p_repeat_speed: 0,
             p_pha_offset: 0,
@@ -405,7 +366,7 @@ const bgm = {
             p_lpf_freq: 1,
             p_lpf_ramp: 0,
             p_lpf_resonance: 0,
-            p_hpf_freq: 0.943808144620575,
+            p_hpf_freq: 0.963542880179254,
             p_hpf_ramp: 0,
             sound_vol: 0.5,
             sample_rate: 44100,
@@ -415,12 +376,12 @@ const bgm = {
             oldParams: true,
             wave_type: 3,
             p_env_attack: 0,
-            p_env_sustain: 0.0460253231334559,
+            p_env_sustain: 0.001954310624976907,
             p_env_punch: 0,
-            p_env_decay: 0.200810847408327,
-            p_base_freq: 0.7669449161079118,
+            p_env_decay: 0.12097926257176529,
+            p_base_freq: 0.8486520906674331,
             p_freq_limit: 0,
-            p_freq_ramp: -0.05804369704752316,
+            p_freq_ramp: 0.23804346163245926,
             p_freq_dramp: 0,
             p_vib_strength: 0,
             p_vib_speed: 0,
@@ -434,7 +395,7 @@ const bgm = {
             p_lpf_freq: 1,
             p_lpf_ramp: 0,
             p_lpf_resonance: 0,
-            p_hpf_freq: 0.9251183348067846,
+            p_hpf_freq: 0.9036174191636074,
             p_hpf_ramp: 0,
             sound_vol: 0.5,
             sample_rate: 44100,
@@ -446,54 +407,25 @@ const bgm = {
       isDrum: true,
     },
     {
-      mml: "l16 o4 rcr4^16c rcr8.cr8. cr4^16c rcr4.^16 cr4^16c rcr8.cr8. cr4^16c rc",
+      mml: "l16 o4 r4cr4.^16 cr4.^16 cr4.^16 cr4.^16 cr4.^16 cr4.^16 cr4.^16 c",
       soundEffect: {
-        type: "click",
+        type: "hit",
         params: [
           {
             oldParams: true,
             wave_type: 3,
             p_env_attack: 0,
-            p_env_sustain: 0.11015759602477684,
-            p_env_punch: 0.42798021212871656,
-            p_env_decay: 0.17062003965263267,
-            p_base_freq: 0.8840516867661038,
+            p_env_sustain: 0.0010151169730851235,
+            p_env_punch: 0,
+            p_env_decay: 0.29747202331141387,
+            p_base_freq: 0.4495645253103144,
             p_freq_limit: 0,
-            p_freq_ramp: -0.404540068214885,
-            p_freq_dramp: 0,
-            p_vib_strength: 0.3795964467757373,
-            p_vib_speed: 0.29586053599972756,
-            p_arp_mod: 0.5788939520201866,
-            p_arp_speed: 0.6733370588564633,
-            p_duty: 0,
-            p_duty_ramp: 0,
-            p_repeat_speed: 0,
-            p_pha_offset: 0.20961354093384316,
-            p_pha_ramp: -0.2483138899664194,
-            p_lpf_freq: 1,
-            p_lpf_ramp: 0,
-            p_lpf_resonance: 0,
-            p_hpf_freq: 0.9709438895971849,
-            p_hpf_ramp: 0,
-            sound_vol: 0.5,
-            sample_rate: 44100,
-            sample_size: 8,
-          },
-          {
-            oldParams: true,
-            wave_type: 3,
-            p_env_attack: 0,
-            p_env_sustain: 0.05598486562097304,
-            p_env_punch: 0.46704374455545183,
-            p_env_decay: 0.14910412910542212,
-            p_base_freq: 0.783836289549674,
-            p_freq_limit: 0,
-            p_freq_ramp: 0.0771324985141709,
+            p_freq_ramp: -0.5276890262560194,
             p_freq_dramp: 0,
             p_vib_strength: 0,
             p_vib_speed: 0,
-            p_arp_mod: 0.4655391610380121,
-            p_arp_speed: 0.8330667028746257,
+            p_arp_mod: 0,
+            p_arp_speed: 0,
             p_duty: 0,
             p_duty_ramp: 0,
             p_repeat_speed: 0,
@@ -502,7 +434,172 @@ const bgm = {
             p_lpf_freq: 1,
             p_lpf_ramp: 0,
             p_lpf_resonance: 0,
-            p_hpf_freq: 0.975972319505171,
+            p_hpf_freq: 0,
+            p_hpf_ramp: 0,
+            sound_vol: 0.5,
+            sample_rate: 44100,
+            sample_size: 8,
+          },
+          {
+            oldParams: true,
+            wave_type: 1,
+            p_env_attack: 0,
+            p_env_sustain: 0.00045944652530817464,
+            p_env_punch: 0,
+            p_env_decay: 0.2992982399648284,
+            p_base_freq: 0.3847142055129433,
+            p_freq_limit: 0,
+            p_freq_ramp: -0.5564664321617379,
+            p_freq_dramp: 0,
+            p_vib_strength: 0,
+            p_vib_speed: 0,
+            p_arp_mod: 0,
+            p_arp_speed: 0,
+            p_duty: 1,
+            p_duty_ramp: 0,
+            p_repeat_speed: 0,
+            p_pha_offset: 0,
+            p_pha_ramp: 0,
+            p_lpf_freq: 1,
+            p_lpf_ramp: 0,
+            p_lpf_resonance: 0,
+            p_hpf_freq: 0.13524610107653917,
+            p_hpf_ramp: 0,
+            sound_vol: 0.5,
+            sample_rate: 44100,
+            sample_size: 8,
+          },
+        ],
+        volume: 0.1,
+      },
+      isDrum: true,
+    },
+    {
+      mml: "l16 o4 rcr4^16c rcr4.^16 cr4^16c rcr4.^16 cr4^16c rcr4.^16 cr4^16c rcr8.c",
+      soundEffect: {
+        type: "hit",
+        params: [
+          {
+            oldParams: true,
+            wave_type: 0,
+            p_env_attack: 0,
+            p_env_sustain: 0.08517369746351003,
+            p_env_punch: 0,
+            p_env_decay: 0.19336790114021113,
+            p_base_freq: 0.7602979077865131,
+            p_freq_limit: 0,
+            p_freq_ramp: -0.5822384942048785,
+            p_freq_dramp: 0,
+            p_vib_strength: 0,
+            p_vib_speed: 0,
+            p_arp_mod: 0,
+            p_arp_speed: 0,
+            p_duty: 0.2946723396178969,
+            p_duty_ramp: 0,
+            p_repeat_speed: 0,
+            p_pha_offset: 0,
+            p_pha_ramp: 0,
+            p_lpf_freq: 1,
+            p_lpf_ramp: 0,
+            p_lpf_resonance: 0,
+            p_hpf_freq: 0.10360224687112547,
+            p_hpf_ramp: 0,
+            sound_vol: 0.5,
+            sample_rate: 44100,
+            sample_size: 8,
+          },
+          {
+            oldParams: true,
+            wave_type: 1,
+            p_env_attack: 0,
+            p_env_sustain: 0.06361106167631482,
+            p_env_punch: 0,
+            p_env_decay: 0.1944800751969405,
+            p_base_freq: 0.6173647807020146,
+            p_freq_limit: 0,
+            p_freq_ramp: -0.5181723041036568,
+            p_freq_dramp: 0,
+            p_vib_strength: 0,
+            p_vib_speed: 0,
+            p_arp_mod: 0,
+            p_arp_speed: 0,
+            p_duty: 1,
+            p_duty_ramp: 0,
+            p_repeat_speed: 0,
+            p_pha_offset: 0,
+            p_pha_ramp: 0,
+            p_lpf_freq: 1,
+            p_lpf_ramp: 0,
+            p_lpf_resonance: 0,
+            p_hpf_freq: 0,
+            p_hpf_ramp: 0,
+            sound_vol: 0.5,
+            sample_rate: 44100,
+            sample_size: 8,
+          },
+        ],
+        volume: 0.1,
+      },
+      isDrum: true,
+    },
+    {
+      mml: "l16 o4 r8cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.c",
+      soundEffect: {
+        type: "hit",
+        params: [
+          {
+            oldParams: true,
+            wave_type: 0,
+            p_env_attack: 0,
+            p_env_sustain: 0.09910904960686086,
+            p_env_punch: 0,
+            p_env_decay: 0.2868394216957594,
+            p_base_freq: 0.5029552703963023,
+            p_freq_limit: 0,
+            p_freq_ramp: -0.40645939803367004,
+            p_freq_dramp: 0,
+            p_vib_strength: 0,
+            p_vib_speed: 0,
+            p_arp_mod: 0,
+            p_arp_speed: 0,
+            p_duty: 0.3945497737719094,
+            p_duty_ramp: 0,
+            p_repeat_speed: 0,
+            p_pha_offset: 0,
+            p_pha_ramp: 0,
+            p_lpf_freq: 1,
+            p_lpf_ramp: 0,
+            p_lpf_resonance: 0,
+            p_hpf_freq: 0,
+            p_hpf_ramp: 0,
+            sound_vol: 0.5,
+            sample_rate: 44100,
+            sample_size: 8,
+          },
+          {
+            oldParams: true,
+            wave_type: 1,
+            p_env_attack: 0,
+            p_env_sustain: 0.030063525408055528,
+            p_env_punch: 0,
+            p_env_decay: 0.23175911417504752,
+            p_base_freq: 0.5342424491267285,
+            p_freq_limit: 0,
+            p_freq_ramp: -0.38586195904898035,
+            p_freq_dramp: 0,
+            p_vib_strength: 0,
+            p_vib_speed: 0,
+            p_arp_mod: 0,
+            p_arp_speed: 0,
+            p_duty: 1,
+            p_duty_ramp: 0,
+            p_repeat_speed: 0,
+            p_pha_offset: 0,
+            p_pha_ramp: 0,
+            p_lpf_freq: 1,
+            p_lpf_ramp: 0,
+            p_lpf_resonance: 0,
+            p_hpf_freq: 0.1282606711676951,
             p_hpf_ramp: 0,
             sound_vol: 0.5,
             sample_rate: 44100,

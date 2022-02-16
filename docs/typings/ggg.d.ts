@@ -12,7 +12,7 @@ declare module ggg {
     notesStepsCount: number;
   };
 
-  function playMml(mmlData: MmlData): void;
+  function playMml(mmlData: MmlData, volume?: number): void;
   function stopMml(): void;
   function playSoundEffect(
     type:
