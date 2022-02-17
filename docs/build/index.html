@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>good-old-game-sound-generator</title>
+    
+    
+    
+    <script type="module" crossorigin src="./assets/index.99359853.js"></script>
+    <link rel="modulepreload" href="./assets/vendor.b88932c4.js">
+    <link rel="stylesheet" href="./assets/index.21878e07.css">
+  </head>
+  <body style="background-color: #ddd">
+    <div class="col-lg-10 mx-auto p-3 py-md-3">
+      <header class="d-flex align-items-center pb-1 mb-1 border-bottom">
+        <span class="fs-4">good-old-game-sound-generator</span>
+      </header>
+      <main id="main">
+        <div class="row g-5">
+          <div class="col-md-1">
+            <button id="generate" class="btn btn-primary" type="button">
+              Generate
+            </button>
+          </div>
+          <div class="col-md-1">Length</div>
+          <div class="col-md-1">
+            <input
+              id="generated_steps_count"
+              type="text"
+              class="form-control"
+            />
+          </div>
+          <div class="col-md-9">
+            <div class="progress" style="height: 20px">
+              <div
+                class="progress-bar"
+                id="progress_bar"
+                role="progressbar"
+                style="width: 0%"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
