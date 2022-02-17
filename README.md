@@ -22,7 +22,7 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 
 ## Sample code
 
-[T LASER source code](https://github.com/abagames/good-old-game-sound-generator/blob/docs/samples/tlaser/main.js)
+[T LASER source code](https://github.com/abagames/good-old-game-sound-generator/blob/main/docs/samples/tlaser/main.js)
 
 ## Functions
 
