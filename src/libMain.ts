@@ -14,6 +14,10 @@ const mmlQuantizeInterval = 0.125;
 let baseRandomSeed;
 let soundEffects: { [key: string]: soundEffect.SoundEffect };
 
+const isSafari =
+  navigator.userAgent.indexOf("Safari") > -1 &&
+  navigator.userAgent.indexOf("Chrome") < 0;
+
 export type MmlData = {
   parts: {
     mml: string;
@@ -24,6 +28,9 @@ export type MmlData = {
 };
 
 export function playMml(mmlData: MmlData, volume: number = 0.1) {
+  if (isSafari) {
+    return;
+  }
   const parts: part.Part[] = mmlData.parts.map((dp) => {
     const p = part.fromJSON(dp, mmlToQuantizedSequence);
     soundEffect.setVolume(p.soundEffect, (p.soundEffect.volume * volume) / 0.2);
@@ -33,6 +40,9 @@ export function playMml(mmlData: MmlData, volume: number = 0.1) {
 }
 
 export function stopMml() {
+  if (isSafari) {
+    return;
+  }
   part.stop();
 }
 
@@ -43,6 +53,9 @@ export function playSoundEffect(
   volume: number = 0.1,
   freq: number = undefined
 ) {
+  if (isSafari) {
+    return;
+  }
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;
   if (soundEffects[key] == null) {
     soundEffects[key] = soundEffect.add(
@@ -57,6 +70,9 @@ export function playSoundEffect(
 }
 
 export function update() {
+  if (isSafari) {
+    return;
+  }
   part.update();
   soundEffect.update();
 }
@@ -65,6 +81,9 @@ export function init(
   _baseRandomSeed = 1,
   audioContext: AudioContext = undefined
 ) {
+  if (isSafari) {
+    return;
+  }
   baseRandomSeed = _baseRandomSeed;
   initAudio(audioContext);
   soundEffect.init();

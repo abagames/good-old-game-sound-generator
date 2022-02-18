@@ -12,7 +12,7 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 
 ## How to use the generated music in your game
 
-Known issue: Cannot play sound on some iOS devices.
+**Known issue**: Audio playback in Safari has been temporarily disabled because audio cannot be played in Safari in some environments.
 
 1. On the Demo page, click the 'Copy to clipboard' button to copy the MML JSON data to your clipboard.
 
