@@ -12,15 +12,11 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 
 ## How to use the generated music in your game
 
-1. On the Demo page, click the 'Copy to clipboard' button to copy the music JSON data to your clipboard.
+1. On the Demo page, click the 'Copy to clipboard' button to copy the MML JSON data to your clipboard.
 
-1. Load `ggg.umd.js`.
+1. Load `dist/ggg.umd.js`. See a [template html file](https://github.com/abagames/good-old-game-sound-generator/blob/main/docs/samples/_template/index.html) for details.
 
-```html
-<script src="https://abagames.github.io/good-old-game-sound-generator/dist/ggg.umd.js"></script>
-```
-
-1. Call the `playMml` function with the JSON in the clipboard as the first argument.
+1. Call the `ggg.playMml` function with the JSON in the clipboard as the first argument.
 
 ## Sample game
 
