@@ -1,4 +1,8 @@
-import { Params, SoundEffect, setRandomFunction } from "../lib/jsfxr/sfxr";
+import {
+  Params,
+  SoundEffect as JsfxrSoundEffect,
+  setRandomFunction,
+} from "../lib/jsfxr/sfxr";
 import { audioContext, getQuantizedTime } from "./audio";
 import { random } from "./random";
 import { times } from "./util";
@@ -116,16 +120,17 @@ export function playLater(
 ) {
   soundEffect.bufferSourceNodes = [];
   soundEffect.buffers.forEach((b) => {
-    const bufferSource = audioContext.createBufferSource();
-    bufferSource.buffer = b;
-    if (detune != null && bufferSource.playbackRate != null) {
+    const bufferSourceNode = audioContext.createBufferSource();
+    bufferSourceNode.buffer = b;
+    if (detune != null && bufferSourceNode.playbackRate != null) {
       const semitoneRatio = Math.pow(2, 1 / 12);
-      bufferSource.playbackRate.value = Math.pow(semitoneRatio, detune);
+      bufferSourceNode.playbackRate.value = Math.pow(semitoneRatio, detune);
     }
-    bufferSource.start = bufferSource.start || (bufferSource as any).noteOn;
-    bufferSource.connect(soundEffect.gainNode);
-    bufferSource.start(when);
-    soundEffect.bufferSourceNodes.push(bufferSource);
+    bufferSourceNode.start =
+      bufferSourceNode.start || (bufferSourceNode as any).noteOn;
+    bufferSourceNode.connect(soundEffect.gainNode);
+    bufferSourceNode.start(when);
+    soundEffect.bufferSourceNodes.push(bufferSourceNode);
   });
 }
 
@@ -155,7 +160,7 @@ export function fromJSON(json): SoundEffect {
   const params = json.params;
   const volume = json.volume;
   const buffers = params.map((p) => {
-    const s = new SoundEffect(p).generate();
+    const s = new JsfxrSoundEffect(p).generate();
     if (s.buffer.length === 0) {
       return audioContext.createBuffer(1, 1, s.sampleRate);
     }
@@ -172,7 +177,7 @@ export function fromJSON(json): SoundEffect {
     params,
     volume,
     buffers,
-    bufferSource: undefined,
+    bufferSourceNodes: undefined,
     gainNode,
     isPlaying: false,
     playedTime: undefined,

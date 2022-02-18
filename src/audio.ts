@@ -5,10 +5,9 @@ export let quantize: number;
 let isStarted = false;
 
 export function init(_audioContext: AudioContext = undefined) {
-  audioContext =
-    _audioContext == null
-      ? new (window.AudioContext || (window as any).webkitAudioContext)()
-      : _audioContext;
+  window.AudioContext =
+    window.AudioContext || (window as any).webkitAudioContext;
+  audioContext = _audioContext == null ? new AudioContext() : _audioContext;
   setTempo();
   setQuantize();
 }
@@ -18,7 +17,6 @@ export function start() {
     return;
   }
   isStarted = true;
-  audioContext.resume();
   playEmptyBuffer();
 }
 
@@ -39,6 +37,5 @@ export function getQuantizedTime(time: number) {
 function playEmptyBuffer() {
   const bufferSource = audioContext.createBufferSource();
   bufferSource.start = bufferSource.start || (bufferSource as any).noteOn;
-  bufferSource.connect(audioContext.destination);
   bufferSource.start();
 }

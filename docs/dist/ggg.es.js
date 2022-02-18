@@ -667,7 +667,8 @@ let playInterval;
 let quantize;
 let isStarted = false;
 function init$2(_audioContext = void 0) {
-  audioContext = _audioContext == null ? new (window.AudioContext || window.webkitAudioContext)() : _audioContext;
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  audioContext = _audioContext == null ? new AudioContext() : _audioContext;
   setTempo();
   setQuantize();
 }
@@ -676,7 +677,6 @@ function start() {
     return;
   }
   isStarted = true;
-  audioContext.resume();
   playEmptyBuffer();
 }
 function setTempo(_tempo = 150) {
@@ -693,7 +693,6 @@ function getQuantizedTime(time) {
 function playEmptyBuffer() {
   const bufferSource = audioContext.createBufferSource();
   bufferSource.start = bufferSource.start || bufferSource.noteOn;
-  bufferSource.connect(audioContext.destination);
   bufferSource.start();
 }
 let randomFunction = Math.random();
@@ -766,21 +765,6 @@ function floatToNumber(flt) {
     return assembleFloat(sign, 255, 0);
   var mantissa = flt / Math.pow(2, exponent);
   return assembleFloat(sign, exponent + 127, mantissa * Math.pow(2, 23) & 8388607);
-}
-function numberToFloat(bytes) {
-  var sign = bytes & 2147483648 ? -1 : 1;
-  var exponent = (bytes >> 23 & 255) - 127;
-  var significand = bytes & ~(-1 << 23);
-  if (exponent == 128)
-    return sign * (significand ? Number.NaN : Number.POSITIVE_INFINITY);
-  if (exponent == -127) {
-    if (significand == 0)
-      return sign * 0;
-    exponent = -126;
-    significand /= 1 << 22;
-  } else
-    significand = (significand | 1 << 23) / (1 << 23);
-  return sign * significand * Math.pow(2, exponent);
 }
 var b58alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 var params_order = [
@@ -1135,70 +1119,7 @@ Params.prototype.mutate = function() {
   return this;
 };
 const sfxr = {};
-sfxr.toBuffer = function(synthdef) {
-  return new SoundEffect(synthdef).getRawBuffer()["buffer"];
-};
-sfxr.toWebAudio = function(synthdef, audiocontext) {
-  var sfx = new SoundEffect(synthdef);
-  var buffer = _sfxr_getNormalized(sfx.getRawBuffer()["buffer"], sfx.bitsPerChannel);
-  if (audiocontext) {
-    var buff = audiocontext.createBuffer(1, buffer.length, sfx.sampleRate);
-    var nowBuffering = buff.getChannelData(0);
-    for (var i = 0; i < buffer.length; i++) {
-      nowBuffering[i] = buffer[i];
-    }
-    var proc = audiocontext.createBufferSource();
-    proc.buffer = buff;
-    return proc;
-  }
-};
-sfxr.toWave = function(synthdef) {
-  return new SoundEffect(synthdef).generate();
-};
-sfxr.toAudio = function(synthdef) {
-  return new SoundEffect(synthdef).generate().getAudio();
-};
-sfxr.b58decode = function(b58encoded) {
-  var decoded = function(S, A) {
-    var d = [], b = [], i, j, c, n;
-    for (i in S) {
-      j = 0, c = A.indexOf(S[i]);
-      if (c < 0)
-        return void 0;
-      c || b.length ^ i ? i : b.push(0);
-      while (j in d || c) {
-        n = d[j];
-        n = n ? n * 58 + c : c;
-        c = n >> 8;
-        d[j] = n % 256;
-        j++;
-      }
-    }
-    while (j--)
-      b.push(d[j]);
-    return new Uint8Array(b);
-  }(b58encoded, b58alphabet);
-  var result = {};
-  for (var pi in params_order) {
-    var p = params_order[pi];
-    var offset = (pi - 1) * 4 + 1;
-    if (p == "wave_type") {
-      result[p] = decoded[0];
-    } else {
-      var val = decoded[offset] | decoded[offset + 1] << 8 | decoded[offset + 2] << 16 | decoded[offset + 3] << 24;
-      result[p] = numberToFloat(val);
-    }
-  }
-  return result;
-};
 function SoundEffect(ps) {
-  if (typeof ps == "string") {
-    var PARAMS = new Params();
-    if (ps.indexOf("#") == 0) {
-      ps = ps.slice(1);
-    }
-    ps = PARAMS.fromB58(ps);
-  }
   this.init(ps);
 }
 SoundEffect.prototype.init = function(ps) {
@@ -1555,16 +1476,16 @@ function updateSoundEffect(soundEffect, currentTime) {
 function playLater(soundEffect, when, detune = void 0) {
   soundEffect.bufferSourceNodes = [];
   soundEffect.buffers.forEach((b) => {
-    const bufferSource = audioContext.createBufferSource();
-    bufferSource.buffer = b;
-    if (detune != null && bufferSource.playbackRate != null) {
+    const bufferSourceNode = audioContext.createBufferSource();
+    bufferSourceNode.buffer = b;
+    if (detune != null && bufferSourceNode.playbackRate != null) {
       const semitoneRatio = Math.pow(2, 1 / 12);
-      bufferSource.playbackRate.value = Math.pow(semitoneRatio, detune);
+      bufferSourceNode.playbackRate.value = Math.pow(semitoneRatio, detune);
     }
-    bufferSource.start = bufferSource.start || bufferSource.noteOn;
-    bufferSource.connect(soundEffect.gainNode);
-    bufferSource.start(when);
-    soundEffect.bufferSourceNodes.push(bufferSource);
+    bufferSourceNode.start = bufferSourceNode.start || bufferSourceNode.noteOn;
+    bufferSourceNode.connect(soundEffect.gainNode);
+    bufferSourceNode.start(when);
+    soundEffect.bufferSourceNodes.push(bufferSourceNode);
   });
 }
 function stop$1(soundEffect, when = void 0) {
@@ -1601,7 +1522,7 @@ function fromJSON$1(json) {
     params,
     volume,
     buffers,
-    bufferSource: void 0,
+    bufferSourceNodes: void 0,
     gainNode,
     isPlaying: false,
     playedTime: void 0
