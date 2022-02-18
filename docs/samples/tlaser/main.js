@@ -49,10 +49,10 @@ let laser;
 /** @type {{pos: Vector, z: number}[]} */
 let stars;
 let multiplier;
+let releasedPos = vec();
 
 function update() {
   if (!ticks) {
-    init();
     if (!isReplaying) {
       ggg.playMml(bgm, 0.07);
     }
@@ -81,9 +81,12 @@ function update() {
     inputPressedPos.set(input.pos);
     sight.pressedPos.set(sight.pos);
   }
+  if (input.isJustReleased) {
+    releasedPos.set(input.pos);
+  }
   if (input.isPressed) {
     sight.pos.set(input.pos).sub(inputPressedPos).add(sight.pressedPos);
-  } else {
+  } else if (input.pos.distanceTo(releasedPos) > 1) {
     sight.pos.set(input.pos);
   }
   sight.pos.clamp(0, 99, 0, 99);
@@ -209,25 +212,21 @@ function update() {
   ggg.update();
 }
 
-let isInitialized = false;
+function gameOver() {
+  ggg.stopMml();
+  end();
+}
 
 function init() {
-  if (isInitialized) {
-    return;
-  }
-  isInitialized = true;
   ggg.init(11);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
-    window.addEventListener(e, () => {
+    document.addEventListener(e, () => {
       ggg.startAudio();
     });
   });
 }
 
-function gameOver() {
-  ggg.stopMml();
-  end();
-}
+window.addEventListener("load", init);
 
 const bgm = {
   parts: [
