@@ -5,9 +5,10 @@ export let quantize: number;
 let isStarted = false;
 
 export function init(_audioContext: AudioContext = undefined) {
-  window.AudioContext =
-    window.AudioContext || (window as any).webkitAudioContext;
-  audioContext = _audioContext == null ? new AudioContext() : _audioContext;
+  audioContext =
+    _audioContext == null
+      ? new (window.AudioContext || (window as any).webkitAudioContext)()
+      : _audioContext;
   setTempo();
   setQuantize();
 }

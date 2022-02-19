@@ -105,7 +105,10 @@ async function generate(seed: number) {
           t,
           random.getInt(999999999),
           t === "explosion" ? 1 : 2,
-          t === "explosion" ? 0.05 : 0.1
+          t === "explosion" ? 0.04 : 0.05,
+          random.get(100, 200),
+          t === "explosion" ? 0.5 : 1,
+          t === "explosion" ? 0.2 : 1
         );
       } else {
         const al = calcNoteLengthAverage(s);
@@ -117,8 +120,8 @@ async function generate(seed: number) {
           t,
           random.getInt(999999999),
           t !== "select" ? 1 : 2,
-          t === "tone" ? 0.2 : t === "synth" ? 0.1 : 0.05,
-          0.35173364,
+          t === "tone" ? 0.03 : t === "synth" ? 0.04 : 0.025,
+          261.6,
           t !== "select" ? 0.1 : 1,
           t !== "select" ? 2 : 1
         );
@@ -207,8 +210,8 @@ function setDefaultMml() {
       const isDrum = t.isDrum;
       return {
         soundEffect: isDrum
-          ? soundEffect.add("hit", 1, 2, 0.1)
-          : soundEffect.add("select", 1, 2, 0.05, 0.35173364),
+          ? soundEffect.add("hit", 1, 2, 0.05, 150)
+          : soundEffect.add("select", 1, 2, 0.025, 261.6),
         isDrum,
       };
     })

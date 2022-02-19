@@ -1,8 +1,4 @@
-import {
-  Params,
-  SoundEffect as JsfxrSoundEffect,
-  setRandomFunction,
-} from "../lib/jsfxr/sfxr";
+import { jsfx } from "../lib/jsfx/index";
 import { audioContext, getQuantizedTime } from "./audio";
 import { random } from "./random";
 import { times } from "./util";
@@ -33,24 +29,26 @@ export const types = [
 ] as const;
 export type Type = typeof types[number];
 const typeFunctionNames = {
-  coin: "pickupCoin",
-  laser: "laserShoot",
-  explosion: "explosion",
-  powerUp: "powerUp",
-  hit: "hitHurt",
-  jump: "jump",
-  select: "blipSelect",
-  synth: "synth",
-  tone: "tone",
-  click: "click",
-  random: "random",
+  coin: "Coin",
+  laser: "Laser",
+  explosion: "Explosion",
+  powerUp: "PowerUp",
+  hit: "Hit",
+  jump: "Jump",
+  select: "Select",
+  synth: "Synth",
+  tone: "Tone",
+  click: "Click",
+  random: "Lucky",
 };
 
 let soundEffects: SoundEffect[];
+let live;
 
 export function init() {
+  live = jsfx.Live();
   soundEffects = [];
-  setRandomFunction(() => random.get());
+  jsfx.setRandomFunc(() => random.get());
 }
 
 export function play(soundEffect: SoundEffect) {
@@ -68,20 +66,23 @@ export function add(
   type: Type,
   seed: number,
   count = 2,
-  volume = 0.1,
+  volume = 0.05,
   freq: number = undefined,
   attackRatio: number = 1,
   sustainRatio: number = 1
 ): SoundEffect {
   const params = times(count, (i) => {
     random.setSeed(seed + i * 1063);
-    let p = new Params();
-    p[typeFunctionNames[type]]();
-    if (freq != null) {
-      p.p_base_freq = freq;
+    const p = jsfx.Preset[typeFunctionNames[type]]();
+    if (freq != null && p.Frequency.Start != null) {
+      p.Frequency.Start = freq;
     }
-    p.p_env_attack *= attackRatio;
-    p.p_env_sustain *= sustainRatio;
+    if (p.Volume.Attack != null) {
+      p.Volume.Attack *= attackRatio;
+    }
+    if (p.Volume.Sustain != null) {
+      p.Volume.Sustain *= sustainRatio;
+    }
     return p;
   });
   const se = fromJSON({ type, params, volume });
@@ -160,13 +161,10 @@ export function fromJSON(json): SoundEffect {
   const params = json.params;
   const volume = json.volume;
   const buffers = params.map((p) => {
-    const s = new JsfxrSoundEffect(p).generate();
-    if (s.buffer.length === 0) {
-      return audioContext.createBuffer(1, 1, s.sampleRate);
-    }
-    const buffer = audioContext.createBuffer(1, s.buffer.length, s.sampleRate);
+    const values = live._generate(p);
+    const buffer = audioContext.createBuffer(1, values.length, jsfx.SampleRate);
     var channelData = buffer.getChannelData(0);
-    channelData.set(s.buffer);
+    channelData.set(values);
     return buffer;
   });
   const gainNode = audioContext.createGain();

@@ -1,6 +1,6 @@
 # good-old-game-sound-generator ([DEMO](https://abagames.github.io/good-old-game-sound-generator/build/))
 
-Generate sound effects and background music for good old-fashioned mini-games. Powered by [magenta.js](https://magenta.tensorflow.org/) and [jsfxr](https://github.com/chr15m/jsfxr).
+Generate sound effects and background music for good old-fashioned mini-games. Powered by [magenta.js](https://magenta.tensorflow.org/) and [jsfx](https://github.com/loov/jsfx).
 
 ## How to generate background music
 
@@ -11,8 +11,6 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 1. Click the 'Generate' button.
 
 ## How to use the generated music in your game
-
-**Known issue**: Audio playback in Safari has been temporarily disabled because audio cannot be played in Safari in some environments.
 
 1. On the Demo page, click the 'Copy to clipboard' button to copy the MML JSON data to your clipboard.
 
