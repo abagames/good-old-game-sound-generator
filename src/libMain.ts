@@ -40,7 +40,7 @@ export function playSoundEffect(
   type: soundEffect.Type,
   seed: number = undefined,
   count: number = 2,
-  volume: number = 0.1,
+  volume: number = 0.05,
   freq: number = undefined
 ) {
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;

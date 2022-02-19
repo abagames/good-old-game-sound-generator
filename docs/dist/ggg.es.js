@@ -1842,7 +1842,7 @@ function playMml(mmlData, volume = 0.1) {
 function stopMml() {
   stop();
 }
-function playSoundEffect(type, seed = void 0, count = 2, volume = 0.1, freq = void 0) {
+function playSoundEffect(type, seed = void 0, count = 2, volume = 0.05, freq = void 0) {
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;
   if (soundEffects[key] == null) {
     soundEffects[key] = add(type, seed == null ? baseRandomSeed : seed, count, volume, freq);
