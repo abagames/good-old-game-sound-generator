@@ -23,7 +23,7 @@ function gameOver() {
 function init() {
   ggg.init(1);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
-    window.addEventListener(e, () => {
+    document.addEventListener(e, () => {
       ggg.startAudio();
     });
   });

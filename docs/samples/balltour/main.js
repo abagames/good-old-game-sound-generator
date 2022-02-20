@@ -143,7 +143,7 @@ function init() {
   // sound effect generation as an argument.
   ggg.init(6);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
-    window.addEventListener(e, () => {
+    document.addEventListener(e, () => {
       // Calling the `startAudio` function from within the event handler of
       // a user operation will enable audio.
       ggg.startAudio();
