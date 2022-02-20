@@ -52,7 +52,8 @@ function update() {
     if (!isReplaying) {
       // Play BGM at the start of the game.
       // The 'bgm' variable is assigned the JSON data copied from the clipboard.
-      ggg.playMml(bgm);
+      // The volume can be specified with the second argument. (default = 0.1)
+      ggg.playMml(bgm, 0.2);
     }
     player = { pos: vec(90, 50), yAngle: 0, vx: 0, ticks: 0 };
     spikes = [];
