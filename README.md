@@ -49,7 +49,6 @@ let multiplier;
 
 function update() {
   if (!ticks) {
-    init();
     if (!isReplaying) {
       // Play BGM at the start of the game.
       // The 'bgm' variable is assigned the JSON data copied from the clipboard.
