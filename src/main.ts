@@ -34,6 +34,7 @@ async function generate(seed: number) {
     generatedNotesStepsCount = defaultGeneratedNotesStepsCount;
     generatedStepsCountTextInput.value = `${generatedNotesStepsCount}`;
   }
+  generatedPlayer.generatedNotesStepsCount = generatedNotesStepsCount;
   const tracks = originPlayer.tracks;
   const melodySequences = [];
   const drumSequences = [];

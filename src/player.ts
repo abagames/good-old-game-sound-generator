@@ -27,6 +27,7 @@ export type Player = {
   stateTextInput: HTMLInputElement;
   parent: HTMLElement;
   tracksDiv: HTMLDivElement;
+  generatedNotesStepsCount?: number;
 };
 
 const timePerStep = 0.125;
@@ -296,7 +297,10 @@ function setFromMmlInputs(player: Player) {
 }
 
 function setPartsAndVisualizers(player: Player) {
-  player.notesStepsCount = 0;
+  player.notesStepsCount =
+    player.generatedNotesStepsCount != null
+      ? player.generatedNotesStepsCount
+      : 0;
   player.tracks.forEach((t) => {
     const stepsCount =
       t.sequence.totalQuantizedSteps != null
