@@ -362,7 +362,6 @@ const durationToNoteLength = [
   ["2.", "16"],
   ["2.", "8"],
   ["2.", "8."],
-  ["1"],
 ];
 
 function sequenceToMml(seq) {
@@ -397,10 +396,9 @@ function sequenceToMml(seq) {
     }
     prevEndStep = n.start + n.duration;
     octaveFreq[n.octave]++;
-    if (n.duration > 16) {
-      n.duration = 16;
+    if (n.duration <= 16) {
+      durationFreq[n.duration]++;
     }
-    durationFreq[n.duration]++;
   }
   let baseOctave = 4;
   let maxOctaveFreq = 0;
@@ -437,7 +435,12 @@ function sequenceToMml(seq) {
       }
       s += n.note;
       if (n.duration !== baseDuration) {
-        const dn = durationToNoteLength[n.duration];
+        let d = n.duration;
+        while (d >= 16) {
+          s += "1^";
+          d -= 16;
+        }
+        const dn = durationToNoteLength[d];
         s += `${dn[0]}`;
         if (dn.length === 2) {
           s += `^${dn[1]}`;
