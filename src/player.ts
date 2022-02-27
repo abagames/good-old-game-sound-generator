@@ -14,7 +14,6 @@ export type Track = {
   visualizer;
   canvas: HTMLCanvasElement;
   mmlInput: HTMLInputElement;
-  drumCheckbox: HTMLInputElement;
 };
 
 export type Player = {
@@ -127,7 +126,6 @@ function insertTrack(player: Player, index: number) {
   );
   player.tracks.splice(index + 1, 0, t);
   addTrackDiv(player);
-  t.drumCheckbox.checked = t.soundEffect.isDrum;
   setMmlStrings(
     player,
     player.tracks.map((t) => t.mml)
@@ -140,21 +138,6 @@ function removeTrack(player: Player, index: number) {
   }
   player.tracks.splice(index, 1);
   addTrackDiv(player);
-  setMmlStrings(
-    player,
-    player.tracks.map((t) => t.mml)
-  );
-}
-
-function toggleDrum(player: Player, index: number) {
-  const t = player.tracks[index];
-  t.soundEffect.isDrum = !t.soundEffect.isDrum;
-  t.soundEffect = soundEffect.getForSequence(
-    t.sequence,
-    t.soundEffect.isDrum,
-    1
-  );
-  t.drumCheckbox.checked = t.soundEffect.isDrum;
   setMmlStrings(
     player,
     player.tracks.map((t) => t.mml)
@@ -176,28 +159,9 @@ function addTrackDiv(player: Player) {
     canvasDiv.appendChild(canvas);
     tracksDiv.appendChild(canvasDiv);
     const inputDiv = document.createElement("div");
-    inputDiv.classList.add("col-md-8");
+    inputDiv.classList.add("col-md-10");
     inputDiv.appendChild(input);
     tracksDiv.appendChild(inputDiv);
-    const drumDiv = document.createElement("div");
-    drumDiv.classList.add("col-md-2");
-    drumDiv.classList.add("form-check");
-    const drumCheckbox = document.createElement("input");
-    drumCheckbox.classList.add("form-check-input");
-    drumCheckbox.type = "checkbox";
-    if (player.tracks[i].soundEffect != null) {
-      drumCheckbox.checked = player.tracks[i].soundEffect.isDrum;
-    }
-    drumCheckbox.addEventListener("click", () => {
-      toggleDrum(player, i);
-    });
-    drumDiv.appendChild(drumCheckbox);
-    player.tracks[i].drumCheckbox = drumCheckbox;
-    const label = document.createElement("label");
-    label.classList.add("form-check-label");
-    label.textContent = "Drum";
-    drumDiv.appendChild(label);
-    tracksDiv.appendChild(drumDiv);
     const addDiv = document.createElement("div");
     addDiv.classList.add("col-md-1");
     const addButton = document.createElement("button");
@@ -250,7 +214,6 @@ export function setTrackSoundEffects(
 ) {
   player.tracks.forEach((t, i) => {
     t.soundEffect = soundEffects[i];
-    t.drumCheckbox.checked = t.soundEffect.isDrum;
   });
 }
 
@@ -309,7 +272,6 @@ function setFromMmlInputs(player: Player) {
       args.type,
       args.volume
     );
-    t.drumCheckbox.checked = t.soundEffect.isDrum;
     setSequence(t, sequence);
   });
 }
