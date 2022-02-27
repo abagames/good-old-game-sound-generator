@@ -236,7 +236,7 @@ export function setMmlStrings(player: Player, mmlStrings: string[]) {
 
 export function setSequences(player: Player, sequences) {
   player.tracks.forEach((t, i) => {
-    setSequence(t, sequences[i]);
+    setSequence(t, sequences[i], player.notesStepsCount);
   });
   setPartsAndVisualizers(player);
 }
@@ -291,7 +291,7 @@ export function stop(player: Player) {
 function setFromMmlInputs(player: Player) {
   player.tracks.forEach((t) => {
     t.mml = t.mmlInput.value;
-    setSequence(t, createSequence(t.mml));
+    setSequence(t, createSequence(t.mml), player.notesStepsCount);
   });
   setPartsAndVisualizers(player);
 }
@@ -323,9 +323,9 @@ function setPartsAndVisualizers(player: Player) {
   player.stateTextInput.value = JSON.stringify(toJSON(player));
 }
 
-function setSequence(track: Track, sequence) {
+function setSequence(track: Track, sequence, notesStepsCount: number) {
   track.sequence = sequence;
-  track.mml = track.mmlInput.value = sequenceToMml(sequence);
+  track.mml = track.mmlInput.value = sequenceToMml(sequence, notesStepsCount);
 }
 
 function createSequence(mml: string) {
@@ -340,6 +340,9 @@ function mmlToSequence(mml) {
     if (ne.type === "note") {
       endTime = ne.time + ne.duration;
       notes.push({ pitch: ne.noteNumber, startTime: ne.time, endTime });
+    }
+    if (ne.type === "end") {
+      endTime = ne.time;
     }
   }
   return { notes, totalTime: endTime };
@@ -364,7 +367,7 @@ const durationToNoteLength = [
   ["2.", "8."],
 ];
 
-function sequenceToMml(seq) {
+function sequenceToMml(seq, notesStepsCount: number) {
   const notes = seq.notes.map((n) => {
     return {
       ...midiNoteNumberToMml(n.pitch),
@@ -399,6 +402,14 @@ function sequenceToMml(seq) {
     if (n.duration <= 16) {
       durationFreq[n.duration]++;
     }
+  }
+  if (notesStepsCount != null && prevEndStep < notesStepsCount) {
+    notes.push({
+      octave: 0,
+      note: "r",
+      start: prevEndStep,
+      duration: notesStepsCount - prevEndStep,
+    });
   }
   let baseOctave = 4;
   let maxOctaveFreq = 0;
@@ -440,10 +451,14 @@ function sequenceToMml(seq) {
           s += "1^";
           d -= 16;
         }
-        const dn = durationToNoteLength[d];
-        s += `${dn[0]}`;
-        if (dn.length === 2) {
-          s += `^${dn[1]}`;
+        if (d > 0) {
+          const dn = durationToNoteLength[d];
+          s += `${dn[0]}`;
+          if (dn.length === 2) {
+            s += `^${dn[1]}`;
+          }
+        } else {
+          s = s.substring(0, s.length - 1);
         }
       }
       return s;
