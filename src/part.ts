@@ -26,24 +26,6 @@ export function get(
   };
 }
 
-export function toJson(part: Part) {
-  return {
-    mml: part.mml,
-    soundEffect: soundEffect.toJson(part.soundEffect),
-  };
-}
-
-export function fromJSON(json, mmlToSequence: Function): Part {
-  const sequence = mmlToSequence(json.mml, notesStepsCount);
-  return {
-    mml: json.mml,
-    sequence,
-    soundEffect: soundEffect.fromJSON(json.soundEffect, sequence),
-    noteIndex: 0,
-    endStep: -1,
-  };
-}
-
 let parts: Part[];
 let notesStepsCount: number;
 let notesStepsIndex: number;

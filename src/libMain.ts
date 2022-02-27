@@ -14,22 +14,28 @@ const mmlQuantizeInterval = 0.125;
 let baseRandomSeed;
 let soundEffects: { [key: string]: soundEffect.SoundEffect };
 
-export type MmlData = {
-  parts: {
-    mml: string;
-    soundEffect: soundEffect.SoundEffect;
-    isDrum: boolean;
-  }[];
-  notesStepsCount: number;
-};
-
-export function playMml(mmlData: MmlData, volume: number = 0.1) {
-  const parts: part.Part[] = mmlData.parts.map((dp) => {
-    const p = part.fromJSON(dp, mmlToQuantizedSequence);
-    soundEffect.setVolume(p.soundEffect, (p.soundEffect.volume * volume) / 0.2);
-    return part.get(p.mml, p.sequence, p.soundEffect);
+export function playMml(mmlStrings: string[], volume: number = 1) {
+  let notesStepsCount = 0;
+  const tracks = mmlStrings.map((ms) => soundEffect.fromMml(ms));
+  tracks.forEach((t) => {
+    const s = getNotesStepsCount(t.mml);
+    if (s > notesStepsCount) {
+      notesStepsCount = s;
+    }
   });
-  part.play(parts, mmlData.notesStepsCount);
+  const parts: part.Part[] = tracks.map((t) => {
+    const { mml, args } = t;
+    const sequence = mmlToQuantizedSequence(mml, notesStepsCount);
+    const se = soundEffect.getForSequence(
+      sequence,
+      args.isDrum,
+      args.seed,
+      args.type,
+      args.volume * volume
+    );
+    return part.get(mml, sequence, se);
+  });
+  part.play(parts, notesStepsCount);
 }
 
 export function stopMml() {
@@ -71,6 +77,15 @@ export function init(
   initAudio(audioContext);
   soundEffect.init();
   soundEffects = {};
+}
+
+function getNotesStepsCount(mml: string) {
+  const iter = new MMLIterator(mml);
+  for (let ne of iter) {
+    if (ne.type === "end") {
+      return Math.floor(ne.time / mmlQuantizeInterval);
+    }
+  }
 }
 
 function mmlToQuantizedSequence(mml: string, notesStepsCount: number) {

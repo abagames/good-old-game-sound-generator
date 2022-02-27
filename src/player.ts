@@ -78,12 +78,12 @@ export function get(
     .getElementById(`load_${playerCount}`)
     .addEventListener("click", () => {
       stop(player);
-      fromJSON(player, JSON.parse(stateTextInput.value));
+      fromMmlStrings(player, JSON.parse(stateTextInput.value));
     });
   document
     .getElementById(`copy_to_clipboard_${playerCount}`)
     .addEventListener("click", () => {
-      player.stateTextInput.value = JSON.stringify(toJSON(player));
+      player.stateTextInput.value = JSON.stringify(toMmlStrings(player));
       navigator.clipboard.writeText(player.stateTextInput.value);
     });
   const player: Player = {
@@ -233,7 +233,7 @@ export function setMmlStrings(player: Player, mmlStrings: string[]) {
   player.tracks.forEach((t, i) => {
     t.mmlInput.value = mmlStrings[i];
   });
-  setSequencesFromMmlInputs(player);
+  setFromMmlInputs(player);
   setPartsAndVisualizers(player);
 }
 
@@ -266,7 +266,7 @@ export function play(player: Player) {
   if (player.tracks == null) {
     return;
   }
-  setSequencesFromMmlInputs(player);
+  setFromMmlInputs(player);
   setPartsAndVisualizers(player);
   player.isPlaying = true;
   part.play(
@@ -290,20 +290,27 @@ export function stop(player: Player) {
   player.playButton.textContent = "Play";
 }
 
-export function setSequencesFromMmlStrings(
-  player: Player,
-  mmlStrings: string[]
-) {
+export function setFromMmlStrings(player: Player, mmlStrings: string[]) {
   player.tracks.forEach((t, i) => {
-    t.mml = t.mmlInput.value = mmlStrings[i];
-    setSequence(t, createSequence(t.mml));
+    t.mmlInput.value = mmlStrings[i];
   });
+  setFromMmlInputs(player);
 }
 
-function setSequencesFromMmlInputs(player: Player) {
+function setFromMmlInputs(player: Player) {
   player.tracks.forEach((t) => {
     t.mml = t.mmlInput.value;
-    setSequence(t, createSequence(t.mml));
+    const { mml, args } = soundEffect.fromMml(t.mml);
+    const sequence = createSequence(mml);
+    t.soundEffect = soundEffect.getForSequence(
+      sequence,
+      args.isDrum,
+      args.seed,
+      args.type,
+      args.volume
+    );
+    t.drumCheckbox.checked = t.soundEffect.isDrum;
+    setSequence(t, sequence);
   });
 }
 
@@ -328,7 +335,7 @@ export function setPartsAndVisualizers(player: Player) {
   player.tracks.forEach((t) => {
     t.part = part.get(t.mml, t.sequence, t.soundEffect, t.visualizer);
   });
-  player.stateTextInput.value = JSON.stringify(toJSON(player));
+  player.stateTextInput.value = JSON.stringify(toMmlStrings(player));
 }
 
 function calcStepsCount(sequence) {
@@ -339,7 +346,7 @@ function calcStepsCount(sequence) {
 
 function setSequence(track: Track, sequence) {
   track.sequence = sequence;
-  track.mml = track.mmlInput.value = sequenceToMml(sequence);
+  track.mml = track.mmlInput.value = sequenceToMml(sequence, track.soundEffect);
 }
 
 function createSequence(mml: string) {
@@ -381,7 +388,7 @@ const durationToNoteLength = [
   ["2.", "8."],
 ];
 
-function sequenceToMml(sequence) {
+function sequenceToMml(sequence, se: soundEffect.SoundEffect) {
   const notesStepsCount = calcStepsCount(sequence);
   const notes = sequence.notes.map((n) => {
     return {
@@ -442,7 +449,9 @@ function sequenceToMml(sequence) {
   }
   let octave = baseOctave;
   let nextSpaceDuration = 8;
-  return `l${durationToNoteLength[baseDuration][0]} o${baseOctave} ${notes
+  return `${soundEffect.toMml(se)} l${
+    durationToNoteLength[baseDuration][0]
+  } o${baseOctave} ${notes
     .map((n) => {
       let s = "";
       if (n.start >= nextSpaceDuration) {
@@ -519,22 +528,11 @@ function getVisualizer(seq, canvas: HTMLCanvasElement, noteRGB: string) {
   });
 }
 
-export function toJSON(player: Player) {
-  return {
-    parts: player.tracks.map((t) => part.toJson(t.part)),
-    notesStepsCount: player.notesStepsCount,
-  };
+export function toMmlStrings(player: Player) {
+  return player.tracks.map((t) => t.mml);
 }
 
-export function fromJSON(player: Player, json) {
-  setTrackCount(player, json.parts.length);
-  const parts: part.Part[] = json.parts.map((p) =>
-    part.fromJSON(p, mmlToSequence)
-  );
-  setTrackSoundEffects(
-    player,
-    parts.map((p) => p.soundEffect)
-  );
-  const mmlStrings = parts.map((p) => p.mml);
+export function fromMmlStrings(player: Player, mmlStrings: string[]) {
+  setTrackCount(player, mmlStrings.length);
   setMmlStrings(player, mmlStrings);
 }

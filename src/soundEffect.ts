@@ -238,21 +238,43 @@ export function stop(soundEffect: SoundEffect, when: number = undefined) {
   }
 }
 
-export function toJson(soundEffect: SoundEffect) {
-  return {
-    isDrum: soundEffect.isDrum,
-    seed: soundEffect.seed,
-    type: soundEffect.type,
-    volume: soundEffect.volume,
-  };
+const volumeMultiplier = 1000;
+
+export function toMml(soundEffect: SoundEffect) {
+  return `@${soundEffect.type}${soundEffect.isDrum ? "@d" : ""}@s${
+    soundEffect.seed
+  } v${Math.floor(soundEffect.volume * volumeMultiplier)}`;
 }
 
-export function fromJSON(json, sequence): SoundEffect {
-  return getForSequence(
-    sequence,
-    json.isDrum,
-    json.seed,
-    json.type,
-    json.volume
-  );
+export function fromMml(mml: string) {
+  let leftMml = `${mml}`;
+  let type: Type;
+  types.forEach((t) => {
+    const st = `@${t}`;
+    const ti = leftMml.indexOf(st);
+    if (ti >= 0) {
+      type = t;
+      leftMml = `${leftMml.slice(0, ti)}${leftMml.slice(ti + st.length)}`;
+    }
+  });
+  const sd = "@d";
+  const di = leftMml.indexOf(sd);
+  let isDrum = false;
+  if (di >= 0) {
+    isDrum = true;
+    leftMml = `${leftMml.slice(0, di)}${leftMml.slice(di + sd.length)}`;
+  }
+  const ss = leftMml.match(/@s\d+/);
+  let seed = 1;
+  if (ss != null) {
+    seed = Number.parseInt(ss[0].substring(2));
+    leftMml = leftMml.replace(/@s\d+/, "");
+  }
+  const vs = leftMml.match(/v\d+/);
+  let volume: number;
+  if (vs != null) {
+    volume = Number.parseInt(vs[0].substring(1)) / volumeMultiplier;
+    leftMml = leftMml.replace(/v\d+/, "");
+  }
+  return { mml: leftMml, args: { isDrum, seed, type, volume } };
 }

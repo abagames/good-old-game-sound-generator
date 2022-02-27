@@ -143,12 +143,12 @@ function loadFromStorage() {
       stepsCount == null ? `${defaultGeneratedNotesStepsCount}` : stepsCount;
     const generatedPlayerJson = localStorage.getItem(generatedPlayerStorageKey);
     if (generatedPlayerJson != null) {
-      player.fromJSON(generatedPlayer, JSON.parse(generatedPlayerJson));
+      player.fromMmlStrings(generatedPlayer, JSON.parse(generatedPlayerJson));
       generatedPlayer.stateTextInput.value = generatedPlayerJson;
     }
     const originPlayerJson = localStorage.getItem(originPlayerStorageKey);
     if (originPlayerJson != null) {
-      player.fromJSON(originPlayer, JSON.parse(originPlayerJson));
+      player.fromMmlStrings(originPlayer, JSON.parse(originPlayerJson));
       originPlayer.stateTextInput.value = originPlayerJson;
     } else {
       setDefaultMml();
@@ -159,27 +159,18 @@ function loadFromStorage() {
   }
 }
 
-const defaultTracks = [
-  { mml: "l16 o4 r>c2. r8c r<a+2. r8a+", isDrum: false },
-  { mml: "l16 o4 fc+fg8c8g8 c8fgcfg fcfg8c8f8 c8ffcfg", isDrum: false },
-  { mml: "l16 o4 crrr crrr crrr crrr crrr crrr crrr crrr", isDrum: true },
-  { mml: "l16 o4 rrrr crrr rrrr crrr rrrr crrr rrrr crrr", isDrum: true },
-  { mml: "l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr", isDrum: true },
-  { mml: "l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr", isDrum: true },
+const defaultMmlStrings = [
+  "l16 o4 r>c2. r8c r<a+2. r8a+",
+  "l16 o4 fc+fg8c8g8 c8fgcfg fcfg8c8f8 c8ffcfg",
+  "@d l16 o4 crrr crrr crrr crrr crrr crrr crrr crrr",
+  "@d l16 o4 rrrr crrr rrrr crrr rrrr crrr rrrr crrr",
+  "@d l16 o4 rcrr rrrc rcrr rrrr rcrr rrrc rcrr rrrr",
+  "@d l16 o4 rrcr rrcr rrcr rrcr rrcr rrcr rrcr rrcr",
 ];
 
 function setDefaultMml() {
-  player.setTrackCount(originPlayer, defaultTracks.length);
-  player.setSequencesFromMmlStrings(
-    originPlayer,
-    defaultTracks.map((t) => t.mml)
-  );
-  player.setTrackSoundEffects(
-    originPlayer,
-    defaultTracks.map((t, i) =>
-      soundEffect.getForSequence(originPlayer.tracks[i].sequence, t.isDrum, 1)
-    )
-  );
+  player.setTrackCount(originPlayer, defaultMmlStrings.length);
+  player.setFromMmlStrings(originPlayer, defaultMmlStrings);
   player.setPartsAndVisualizers(originPlayer);
 }
 

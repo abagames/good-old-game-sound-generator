@@ -949,7 +949,7 @@ var jsfx = {};
       $.guitarHead = 0;
       var B = $.guitarBuffer;
       for (var i = 0; i < B.length; i++) {
-        B[i] = random2() * 2 - 1;
+        B[i] = random() * 2 - 1;
       }
     },
     process: function($, block) {
@@ -1306,9 +1306,9 @@ var jsfx = {};
         map_object(defs, function(def, name) {
           if (def.C) {
             var values = Object_keys(def.C);
-            out[name] = values[values.length * random2() | 0];
+            out[name] = values[values.length * random() | 0];
           } else {
-            out[name] = random2() * (def.H - def.L) + def.L;
+            out[name] = random() * (def.H - def.L) + def.L;
           }
         });
       });
@@ -1370,7 +1370,7 @@ var jsfx = {};
       var BM = BS - 1;
       var buffer = createFloatArray(BS);
       for (var i = 0; i < buffer.length; i++) {
-        buffer[i] = random2() * 2 - 1;
+        buffer[i] = random() * 2 - 1;
       }
       var head = 0;
       return function($, block) {
@@ -1509,7 +1509,7 @@ var jsfx = {};
     return r;
   }
   function runif(scale, offset) {
-    var a = random2();
+    var a = random();
     if (scale !== void 0)
       a *= scale;
     if (offset !== void 0)
@@ -1517,7 +1517,7 @@ var jsfx = {};
     return a;
   }
   function rchoose(gens) {
-    return gens[gens.length * random2() | 0];
+    return gens[gens.length * random() | 0];
   }
   function Object_keys(obj) {
     var r = [];
@@ -1549,7 +1549,7 @@ var jsfx = {};
   jsfx2.setRandomFunc = function(func) {
     randomFunc = func;
   };
-  function random2() {
+  function random() {
     return randomFunc();
   }
 })(jsfx = {});
@@ -1608,7 +1608,6 @@ class Random {
     return this.w;
   }
 }
-const random = new Random();
 function times(n, func) {
   let result = [];
   for (let i = 0; i < n; i++) {
@@ -1616,6 +1615,19 @@ function times(n, func) {
   }
   return result;
 }
+const types = [
+  "coin",
+  "laser",
+  "explosion",
+  "powerUp",
+  "hit",
+  "jump",
+  "select",
+  "synth",
+  "tone",
+  "click",
+  "random"
+];
 const typeFunctionNames = {
   coin: "Coin",
   laser: "Laser",
@@ -1629,12 +1641,13 @@ const typeFunctionNames = {
   click: "Click",
   random: "Lucky"
 };
+const jsfxRandom = new Random();
 let soundEffects$1;
 let live;
 function init$1() {
   live = jsfx.Live();
   soundEffects$1 = [];
-  jsfx.setRandomFunc(() => random.get());
+  jsfx.setRandomFunc(() => jsfxRandom.get());
 }
 function play$1(soundEffect) {
   playSoundEffect$1(soundEffect);
@@ -1645,9 +1658,9 @@ function update$2() {
     updateSoundEffect(se, currentTime);
   });
 }
-function add(type, seed, count = 2, volume = 0.05, freq = void 0, attackRatio = 1, sustainRatio = 1) {
+function get$1(type, seed, count = 2, volume = 0.05, freq = void 0, attackRatio = 1, sustainRatio = 1) {
   const params = times(count, (i) => {
-    random.setSeed(seed + i * 1063);
+    jsfxRandom.setSeed(seed + i * 1063);
     const p = jsfx.Preset[typeFunctionNames[type]]();
     if (freq != null && p.Frequency.Start != null) {
       p.Frequency.Start = freq;
@@ -1660,12 +1673,61 @@ function add(type, seed, count = 2, volume = 0.05, freq = void 0, attackRatio = 
     }
     return p;
   });
-  const se = fromJSON$1({ type, params, volume });
-  soundEffects$1.push(se);
+  return createBuffers(type, params, volume);
+}
+function createBuffers(type, params, volume) {
+  const buffers = params.map((p) => {
+    const values = live._generate(p);
+    const buffer = audioContext.createBuffer(1, values.length, jsfx.SampleRate);
+    var channelData = buffer.getChannelData(0);
+    channelData.set(values);
+    return buffer;
+  });
+  const gainNode = audioContext.createGain();
+  gainNode.gain.value = volume;
+  gainNode.connect(audioContext.destination);
+  return {
+    type,
+    params,
+    volume,
+    buffers,
+    bufferSourceNodes: void 0,
+    gainNode,
+    isPlaying: false,
+    playedTime: void 0
+  };
+}
+function getForSequence(sequence, isDrum, seed, type, volume) {
+  const random = new Random();
+  random.setSeed(seed);
+  let se;
+  if (isDrum) {
+    let t = random.select(["hit", "hit", "click", "click", "explosion"]);
+    if (type != null) {
+      t = type;
+    }
+    se = get$1(t, random.getInt(999999999), t === "explosion" ? 1 : 2, volume != null ? volume : t === "explosion" ? 0.04 : 0.05, random.get(100, 200), t === "explosion" ? 0.5 : 1, t === "explosion" ? 0.2 : 1);
+  } else {
+    const al = calcNoteLengthAverage(sequence);
+    let t = random.get() < 1 / al ? "select" : random.select(["tone", "tone", "synth"]);
+    if (type != null) {
+      t = type;
+    }
+    se = get$1(t, random.getInt(999999999), t !== "select" ? 1 : 2, volume != null ? volume : t === "tone" ? 0.03 : t === "synth" ? 0.04 : 0.025, 261.6, t !== "select" ? 0.1 : 1, t !== "select" ? 2 : 1);
+  }
+  se.isDrum = isDrum;
+  se.seed = seed;
   return se;
 }
-function setVolume(soundEffect, volume) {
-  soundEffect.gainNode.gain.value = volume;
+function calcNoteLengthAverage(sequence) {
+  let sl = 0;
+  sequence.notes.forEach((n) => {
+    sl += n.quantizedEndStep - n.quantizedStartStep;
+  });
+  return sl / sequence.notes.length;
+}
+function add(se) {
+  soundEffects$1.push(se);
 }
 function playSoundEffect$1(soundEffect) {
   soundEffect.isPlaying = true;
@@ -1708,50 +1770,47 @@ function stop$1(soundEffect, when = void 0) {
     soundEffect.bufferSourceNodes = void 0;
   }
 }
-function fromJSON$1(json) {
-  const type = json.type;
-  const params = json.params;
-  const volume = json.volume;
-  const buffers = params.map((p) => {
-    const values = live._generate(p);
-    const buffer = audioContext.createBuffer(1, values.length, jsfx.SampleRate);
-    var channelData = buffer.getChannelData(0);
-    channelData.set(values);
-    return buffer;
+const volumeMultiplier = 1e3;
+function fromMml(mml) {
+  let leftMml = `${mml}`;
+  let type;
+  types.forEach((t) => {
+    const st = `@${t}`;
+    const ti = leftMml.indexOf(st);
+    if (ti >= 0) {
+      type = t;
+      leftMml = `${leftMml.slice(0, ti)}${leftMml.slice(ti + st.length)}`;
+    }
   });
-  const gainNode = audioContext.createGain();
-  gainNode.gain.value = volume;
-  gainNode.connect(audioContext.destination);
-  return {
-    type,
-    params,
-    volume,
-    buffers,
-    bufferSourceNodes: void 0,
-    gainNode,
-    isPlaying: false,
-    playedTime: void 0
-  };
+  const sd = "@d";
+  const di = leftMml.indexOf(sd);
+  let isDrum = false;
+  if (di >= 0) {
+    isDrum = true;
+    leftMml = `${leftMml.slice(0, di)}${leftMml.slice(di + sd.length)}`;
+  }
+  const ss = leftMml.match(/@s\d+/);
+  let seed = 1;
+  if (ss != null) {
+    seed = Number.parseInt(ss[0].substring(2));
+    leftMml = leftMml.replace(/@s\d+/, "");
+  }
+  const vs = leftMml.match(/v\d+/);
+  let volume;
+  if (vs != null) {
+    volume = Number.parseInt(vs[0].substring(1)) / volumeMultiplier;
+    leftMml = leftMml.replace(/v\d+/, "");
+  }
+  return { mml: leftMml, args: { isDrum, seed, type, volume } };
 }
-function get(mml, sequence, soundEffect2, isDrum, visualizer) {
+function get(mml, sequence, soundEffect2, visualizer) {
   return {
     mml,
     sequence,
     soundEffect: soundEffect2,
-    isDrum,
     noteIndex: 0,
     endStep: -1,
     visualizer
-  };
-}
-function fromJSON(json, mmlToSequence) {
-  return {
-    mml: json.mml,
-    sequence: mmlToSequence(json.mml, notesStepsCount),
-    soundEffect: fromJSON$1(json.soundEffect),
-    isDrum: json.isDrum,
-    noteIndex: 0,
-    endStep: -1
   };
 }
 let parts;
@@ -1811,7 +1870,7 @@ function updatePart(p, time) {
   if (p.soundEffect.type === "synth" || p.soundEffect.type === "tone") {
     stop$1(p.soundEffect);
   }
-  if (p.isDrum) {
+  if (p.soundEffect.isDrum) {
     playLater(p.soundEffect, time);
   } else {
     playLater(p.soundEffect, time, n.pitch - 69);
@@ -1831,13 +1890,22 @@ function updatePart(p, time) {
 const mmlQuantizeInterval = 0.125;
 let baseRandomSeed;
 let soundEffects;
-function playMml(mmlData, volume = 0.1) {
-  const parts2 = mmlData.parts.map((dp) => {
-    const p = fromJSON(dp, mmlToQuantizedSequence);
-    setVolume(p.soundEffect, p.soundEffect.volume * volume / 0.2);
-    return get(p.mml, p.sequence, p.soundEffect, p.isDrum);
+function playMml(mmlStrings, volume = 1) {
+  let notesStepsCount2 = 0;
+  const tracks = mmlStrings.map((ms) => fromMml(ms));
+  tracks.forEach((t) => {
+    const s = getNotesStepsCount(t.mml);
+    if (s > notesStepsCount2) {
+      notesStepsCount2 = s;
+    }
   });
-  play(parts2, mmlData.notesStepsCount);
+  const parts2 = tracks.map((t) => {
+    const { mml, args } = t;
+    const sequence = mmlToQuantizedSequence(mml, notesStepsCount2);
+    const se = getForSequence(sequence, args.isDrum, args.seed, args.type, args.volume * volume);
+    return get(mml, sequence, se);
+  });
+  play(parts2, notesStepsCount2);
 }
 function stopMml() {
   stop();
@@ -1845,7 +1913,9 @@ function stopMml() {
 function playSoundEffect(type, seed = void 0, count = 2, volume = 0.05, freq = void 0) {
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;
   if (soundEffects[key] == null) {
-    soundEffects[key] = add(type, seed == null ? baseRandomSeed : seed, count, volume, freq);
+    const se = get$1(type, seed == null ? baseRandomSeed : seed, count, volume, freq);
+    add(se);
+    soundEffects[key] = se;
   }
   play$1(soundEffects[key]);
 }
@@ -1858,6 +1928,14 @@ function init(_baseRandomSeed = 1, audioContext2 = void 0) {
   init$2(audioContext2);
   init$1();
   soundEffects = {};
+}
+function getNotesStepsCount(mml) {
+  const iter = new lib(mml);
+  for (let ne of iter) {
+    if (ne.type === "end") {
+      return Math.floor(ne.time / mmlQuantizeInterval);
+    }
+  }
 }
 function mmlToQuantizedSequence(mml, notesStepsCount2) {
   const notes = [];

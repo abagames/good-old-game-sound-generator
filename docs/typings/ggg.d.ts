@@ -1,19 +1,6 @@
 declare module ggg {
-  type MmlData = {
-    parts: {
-      mml: string;
-      soundEffect: {
-        type: string;
-        params: any;
-        volume: number;
-      };
-      isDrum: boolean;
-    }[];
-    notesStepsCount: number;
-  };
-
   // Play music described in MML JSON data
-  function playMml(mmlData: MmlData, volume?: number): void;
+  function playMml(mmlStrings: string[], volume?: number): void;
   // Stop music
   function stopMml(): void;
   // Play the sound effect
