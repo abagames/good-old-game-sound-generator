@@ -1,6 +1,6 @@
 import { jsfx } from "../lib/jsfx/index";
 import { audioContext, getQuantizedTime } from "./audio";
-import { random } from "./random";
+import { Random } from "./random";
 import { times } from "./util";
 
 export type SoundEffect = {
@@ -12,6 +12,8 @@ export type SoundEffect = {
   gainNode: GainNode;
   isPlaying: boolean;
   playedTime: number;
+  isDrum?: boolean;
+  seed?: number;
 };
 
 export const types = [
@@ -42,13 +44,14 @@ const typeFunctionNames = {
   random: "Lucky",
 };
 
+const jsfxRandom = new Random();
 let soundEffects: SoundEffect[];
 let live;
 
 export function init() {
   live = jsfx.Live();
   soundEffects = [];
-  jsfx.setRandomFunc(() => random.get());
+  jsfx.setRandomFunc(() => jsfxRandom.get());
 }
 
 export function play(soundEffect: SoundEffect) {
@@ -62,7 +65,7 @@ export function update() {
   });
 }
 
-export function add(
+export function get(
   type: Type,
   seed: number,
   count = 2,
@@ -72,7 +75,7 @@ export function add(
   sustainRatio: number = 1
 ): SoundEffect {
   const params = times(count, (i) => {
-    random.setSeed(seed + i * 1063);
+    jsfxRandom.setSeed(seed + i * 1063);
     const p = jsfx.Preset[typeFunctionNames[type]]();
     if (freq != null && p.Frequency.Start != null) {
       p.Frequency.Start = freq;
@@ -85,9 +88,96 @@ export function add(
     }
     return p;
   });
-  const se = fromJSON({ type, params, volume });
-  soundEffects.push(se);
+  return createBuffers(type, params, volume);
+}
+
+function createBuffers(type: Type, params, volume: number): SoundEffect {
+  const buffers = params.map((p) => {
+    const values = live._generate(p);
+    const buffer = audioContext.createBuffer(1, values.length, jsfx.SampleRate);
+    var channelData = buffer.getChannelData(0);
+    channelData.set(values);
+    return buffer;
+  });
+  const gainNode = audioContext.createGain();
+  gainNode.gain.value = volume;
+  gainNode.connect(audioContext.destination);
+  return {
+    type,
+    params,
+    volume,
+    buffers,
+    bufferSourceNodes: undefined,
+    gainNode,
+    isPlaying: false,
+    playedTime: undefined,
+  };
+}
+
+export function getForSequence(
+  sequence,
+  isDrum: boolean,
+  seed: number,
+  type?: Type,
+  volume?: number
+) {
+  const random = new Random();
+  random.setSeed(seed);
+  let se: SoundEffect;
+  if (isDrum) {
+    let t = random.select(["hit", "hit", "click", "click", "explosion"]);
+    if (type != null) {
+      t = type;
+    }
+    se = get(
+      t,
+      random.getInt(999999999),
+      t === "explosion" ? 1 : 2,
+      volume != null ? volume : t === "explosion" ? 0.04 : 0.05,
+      random.get(100, 200),
+      t === "explosion" ? 0.5 : 1,
+      t === "explosion" ? 0.2 : 1
+    );
+  } else {
+    const al = calcNoteLengthAverage(sequence);
+    let t =
+      random.get() < 1 / al
+        ? "select"
+        : random.select(["tone", "tone", "synth"]);
+    if (type != null) {
+      t = type;
+    }
+    se = get(
+      t,
+      random.getInt(999999999),
+      t !== "select" ? 1 : 2,
+      volume != null
+        ? volume
+        : t === "tone"
+        ? 0.03
+        : t === "synth"
+        ? 0.04
+        : 0.025,
+      261.6,
+      t !== "select" ? 0.1 : 1,
+      t !== "select" ? 2 : 1
+    );
+  }
+  se.isDrum = isDrum;
+  se.seed = seed;
   return se;
+}
+
+function calcNoteLengthAverage(sequence) {
+  let sl = 0;
+  sequence.notes.forEach((n) => {
+    sl += n.quantizedEndStep - n.quantizedStartStep;
+  });
+  return sl / sequence.notes.length;
+}
+
+export function add(se: SoundEffect) {
+  soundEffects.push(se);
 }
 
 export function remove(tse: SoundEffect) {
@@ -150,34 +240,19 @@ export function stop(soundEffect: SoundEffect, when: number = undefined) {
 
 export function toJson(soundEffect: SoundEffect) {
   return {
+    isDrum: soundEffect.isDrum,
+    seed: soundEffect.seed,
     type: soundEffect.type,
-    params: soundEffect.params,
     volume: soundEffect.volume,
   };
 }
 
-export function fromJSON(json): SoundEffect {
-  const type = json.type;
-  const params = json.params;
-  const volume = json.volume;
-  const buffers = params.map((p) => {
-    const values = live._generate(p);
-    const buffer = audioContext.createBuffer(1, values.length, jsfx.SampleRate);
-    var channelData = buffer.getChannelData(0);
-    channelData.set(values);
-    return buffer;
-  });
-  const gainNode = audioContext.createGain();
-  gainNode.gain.value = volume;
-  gainNode.connect(audioContext.destination);
-  return {
-    type,
-    params,
-    volume,
-    buffers,
-    bufferSourceNodes: undefined,
-    gainNode,
-    isPlaying: false,
-    playedTime: undefined,
-  };
+export function fromJSON(json, sequence): SoundEffect {
+  return getForSequence(
+    sequence,
+    json.isDrum,
+    json.seed,
+    json.type,
+    json.volume
+  );
 }

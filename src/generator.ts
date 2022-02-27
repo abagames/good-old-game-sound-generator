@@ -2,7 +2,7 @@ import "../lib/magenta/music";
 import { setRandomFunction } from "../lib/magenta/music";
 declare const mm: any;
 import * as soundEffect from "./soundEffect";
-import { random } from "./random";
+import { Random } from "./random";
 import { cloneDeep, pitchToFreq, stableSort, times } from "./util";
 
 const melodyRnn = new mm.MusicRNN(
@@ -12,6 +12,8 @@ const drumRnn = new mm.MusicRNN(
   "https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/drum_kit_rnn"
 );
 
+const magentaRandom = new Random();
+
 export type Track = {
   sequence;
   soundEffect: soundEffect.SoundEffect;
@@ -19,7 +21,7 @@ export type Track = {
 };
 
 export function init() {
-  setRandomFunction(() => random.get());
+  setRandomFunction(() => magentaRandom.get());
 }
 
 export async function generate(
@@ -36,7 +38,7 @@ export async function generate(
     progressBar.textContent = "Generating...";
     progressBar.style.width = "10%";
   }
-  random.setSeed(seed);
+  magentaRandom.setSeed(seed);
   let rnn;
   if (isDrum) {
     await drumRnn.initialize();
@@ -65,7 +67,7 @@ export async function generate(
       sequences[j] = nextSequences[j];
     }
   }
-  const offset = random.getInt(6) * random.getPlusOrMinus();
+  const offset = magentaRandom.getInt(6) * magentaRandom.getPlusOrMinus();
   sequences.forEach((s) => {
     shiftPitch(s, offset);
   });

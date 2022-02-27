@@ -67,5 +67,3 @@ export class Random {
     return this.w;
   }
 }
-
-export const random = new Random();

@@ -5,7 +5,6 @@ export type Part = {
   mml: string;
   sequence;
   soundEffect: soundEffect.SoundEffect;
-  isDrum: boolean;
   noteIndex: number;
   endStep: number;
   visualizer?;
@@ -15,14 +14,12 @@ export function get(
   mml: string,
   sequence,
   soundEffect: soundEffect.SoundEffect,
-  isDrum: boolean,
   visualizer?
 ): Part {
   return {
     mml,
     sequence,
     soundEffect,
-    isDrum,
     noteIndex: 0,
     endStep: -1,
     visualizer,
@@ -33,16 +30,15 @@ export function toJson(part: Part) {
   return {
     mml: part.mml,
     soundEffect: soundEffect.toJson(part.soundEffect),
-    isDrum: part.isDrum,
   };
 }
 
 export function fromJSON(json, mmlToSequence: Function): Part {
+  const sequence = mmlToSequence(json.mml, notesStepsCount);
   return {
     mml: json.mml,
-    sequence: mmlToSequence(json.mml, notesStepsCount),
-    soundEffect: soundEffect.fromJSON(json.soundEffect),
-    isDrum: json.isDrum,
+    sequence,
+    soundEffect: soundEffect.fromJSON(json.soundEffect, sequence),
     noteIndex: 0,
     endStep: -1,
   };
@@ -112,7 +108,7 @@ function updatePart(p: Part, time: number) {
   if (p.soundEffect.type === "synth" || p.soundEffect.type === "tone") {
     soundEffect.stop(p.soundEffect);
   }
-  if (p.isDrum) {
+  if (p.soundEffect.isDrum) {
     soundEffect.playLater(p.soundEffect, time);
   } else {
     soundEffect.playLater(p.soundEffect, time, n.pitch - 69);

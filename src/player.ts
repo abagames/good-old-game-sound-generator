@@ -5,13 +5,11 @@ import MMLIterator from "mml-iterator";
 import { cloneDeep, times } from "./util";
 import * as part from "./part";
 import * as soundEffect from "./soundEffect";
-import { random } from "./random";
 
 export type Track = {
   mml: string;
   sequence;
   soundEffect: soundEffect.SoundEffect;
-  isDrum: boolean;
   part;
   visualizer;
   canvas: HTMLCanvasElement;
@@ -122,13 +120,14 @@ export function setTrackCount(player: Player, trackCount: number) {
 
 function insertTrack(player: Player, index: number) {
   const t: Track = cloneDeep(emptyTrack);
-  t.isDrum = player.tracks[index].isDrum;
-  t.soundEffect = t.isDrum
-    ? soundEffect.add("hit", random.getInt(999999999), 2, 0.1)
-    : soundEffect.add("select", random.getInt(999999999), 2, 0.05, 0.35173364);
+  t.soundEffect = soundEffect.getForSequence(
+    t.sequence,
+    player.tracks[index].soundEffect.isDrum,
+    1
+  );
   player.tracks.splice(index + 1, 0, t);
   addTrackDiv(player);
-  t.drumCheckbox.checked = t.isDrum;
+  t.drumCheckbox.checked = t.soundEffect.isDrum;
   setMmlStrings(
     player,
     player.tracks.map((t) => t.mml)
@@ -149,12 +148,13 @@ function removeTrack(player: Player, index: number) {
 
 function toggleDrum(player: Player, index: number) {
   const t = player.tracks[index];
-  t.isDrum = !t.isDrum;
-  t.soundEffect = t.isDrum
-    ? soundEffect.add("hit", random.getInt(999999999), 2, 0.1)
-    : soundEffect.add("select", random.getInt(999999999), 2, 0.05, 0.35173364);
-  addTrackDiv(player);
-  t.drumCheckbox.checked = t.isDrum;
+  t.soundEffect.isDrum = !t.soundEffect.isDrum;
+  t.soundEffect = soundEffect.getForSequence(
+    t.sequence,
+    t.soundEffect.isDrum,
+    1
+  );
+  t.drumCheckbox.checked = t.soundEffect.isDrum;
   setMmlStrings(
     player,
     player.tracks.map((t) => t.mml)
@@ -185,7 +185,9 @@ function addTrackDiv(player: Player) {
     const drumCheckbox = document.createElement("input");
     drumCheckbox.classList.add("form-check-input");
     drumCheckbox.type = "checkbox";
-    drumCheckbox.checked = player.tracks[i].isDrum;
+    if (player.tracks[i].soundEffect != null) {
+      drumCheckbox.checked = player.tracks[i].soundEffect.isDrum;
+    }
     drumCheckbox.addEventListener("click", () => {
       toggleDrum(player, i);
     });
@@ -231,7 +233,8 @@ export function setMmlStrings(player: Player, mmlStrings: string[]) {
   player.tracks.forEach((t, i) => {
     t.mmlInput.value = mmlStrings[i];
   });
-  setFromMmlInputs(player);
+  setSequencesFromMmlInputs(player);
+  setPartsAndVisualizers(player);
 }
 
 export function setSequences(player: Player, sequences) {
@@ -241,15 +244,13 @@ export function setSequences(player: Player, sequences) {
   setPartsAndVisualizers(player);
 }
 
-export function setTrackSounds(
+export function setTrackSoundEffects(
   player: Player,
-  trackSounds: { soundEffect: soundEffect.SoundEffect; isDrum: boolean }[]
+  soundEffects: soundEffect.SoundEffect[]
 ) {
   player.tracks.forEach((t, i) => {
-    const ts = trackSounds[i];
-    t.soundEffect = ts.soundEffect;
-    t.isDrum = ts.isDrum;
-    t.drumCheckbox.checked = t.isDrum;
+    t.soundEffect = soundEffects[i];
+    t.drumCheckbox.checked = t.soundEffect.isDrum;
   });
 }
 
@@ -265,7 +266,8 @@ export function play(player: Player) {
   if (player.tracks == null) {
     return;
   }
-  setFromMmlInputs(player);
+  setSequencesFromMmlInputs(player);
+  setPartsAndVisualizers(player);
   player.isPlaying = true;
   part.play(
     player.tracks.map((t) => t.part),
@@ -288,15 +290,24 @@ export function stop(player: Player) {
   player.playButton.textContent = "Play";
 }
 
-function setFromMmlInputs(player: Player) {
+export function setSequencesFromMmlStrings(
+  player: Player,
+  mmlStrings: string[]
+) {
+  player.tracks.forEach((t, i) => {
+    t.mml = t.mmlInput.value = mmlStrings[i];
+    setSequence(t, createSequence(t.mml));
+  });
+}
+
+function setSequencesFromMmlInputs(player: Player) {
   player.tracks.forEach((t) => {
     t.mml = t.mmlInput.value;
     setSequence(t, createSequence(t.mml));
   });
-  setPartsAndVisualizers(player);
 }
 
-function setPartsAndVisualizers(player: Player) {
+export function setPartsAndVisualizers(player: Player) {
   player.notesStepsCount =
     player.generatedNotesStepsCount != null
       ? player.generatedNotesStepsCount
@@ -311,11 +322,11 @@ function setPartsAndVisualizers(player: Player) {
   player.tracks.forEach((t) => {
     t.sequence.totalTime = totalTime;
     t.sequence.totalQuantizedSteps = player.notesStepsCount;
-    const rgb = t.isDrum ? "150, 150, 150" : "100, 100, 200";
+    const rgb = t.soundEffect.isDrum ? "150, 150, 150" : "100, 100, 200";
     t.visualizer = getVisualizer(t.sequence, t.canvas, rgb);
   });
   player.tracks.forEach((t) => {
-    t.part = part.get(t.mml, t.sequence, t.soundEffect, t.isDrum, t.visualizer);
+    t.part = part.get(t.mml, t.sequence, t.soundEffect, t.visualizer);
   });
   player.stateTextInput.value = JSON.stringify(toJSON(player));
 }
@@ -520,13 +531,10 @@ export function fromJSON(player: Player, json) {
   const parts: part.Part[] = json.parts.map((p) =>
     part.fromJSON(p, mmlToSequence)
   );
-  const tracksSounds = parts.map((p) => {
-    return {
-      soundEffect: p.soundEffect,
-      isDrum: p.isDrum,
-    };
-  });
-  setTrackSounds(player, tracksSounds);
+  setTrackSoundEffects(
+    player,
+    parts.map((p) => p.soundEffect)
+  );
   const mmlStrings = parts.map((p) => p.mml);
   setMmlStrings(player, mmlStrings);
 }

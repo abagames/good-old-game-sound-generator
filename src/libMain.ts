@@ -27,7 +27,7 @@ export function playMml(mmlData: MmlData, volume: number = 0.1) {
   const parts: part.Part[] = mmlData.parts.map((dp) => {
     const p = part.fromJSON(dp, mmlToQuantizedSequence);
     soundEffect.setVolume(p.soundEffect, (p.soundEffect.volume * volume) / 0.2);
-    return part.get(p.mml, p.sequence, p.soundEffect, p.isDrum);
+    return part.get(p.mml, p.sequence, p.soundEffect);
   });
   part.play(parts, mmlData.notesStepsCount);
 }
@@ -45,13 +45,15 @@ export function playSoundEffect(
 ) {
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;
   if (soundEffects[key] == null) {
-    soundEffects[key] = soundEffect.add(
+    const se = soundEffect.get(
       type,
       seed == null ? baseRandomSeed : seed,
       count,
       volume,
       freq
     );
+    soundEffect.add(se);
+    soundEffects[key] = se;
   }
   soundEffect.play(soundEffects[key]);
 }

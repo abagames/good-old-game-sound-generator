@@ -4,7 +4,7 @@ import * as part from "./part";
 import * as player from "./player";
 import * as generator from "./generator";
 import { cloneDeep } from "./util";
-import { Random, random } from "./random";
+import { Random } from "./random";
 
 const seedRandom = new Random();
 let originPlayer: player.Player;
@@ -21,6 +21,7 @@ function update() {
 }
 
 async function generate(seed: number) {
+  const random = new Random(seed);
   player.stop(generatedPlayer);
   player.stop(originPlayer);
   let generatedNotesStepsCount = Number.parseInt(
@@ -41,7 +42,7 @@ async function generate(seed: number) {
   let tmpDrumSequences = [];
   const drumTrackCounts = [];
   tracks.forEach((t) => {
-    if (t.isDrum) {
+    if (t.soundEffect.isDrum) {
       tmpDrumSequences.push(cloneDeep(t.sequence));
       if (tmpDrumSequences.length === 4) {
         drumSequences.push(
@@ -61,7 +62,7 @@ async function generate(seed: number) {
     drumTrackCounts.push(tmpDrumSequences.length);
   }
   let generatedMelodySequences = await generator.generate(
-    seed,
+    random.getInt(999999999),
     melodySequences,
     2,
     0.99,
@@ -71,7 +72,7 @@ async function generate(seed: number) {
     progressBar
   );
   let generatedDrumPitchSequences = await generator.generate(
-    seed,
+    random.getInt(999999999),
     drumSequences,
     2,
     0.99,
@@ -95,57 +96,21 @@ async function generate(seed: number) {
     generatedDrumSequences
   );
   player.setTrackCount(generatedPlayer, generatedSequences.length);
-  player.setTrackSounds(
+  player.setTrackSoundEffects(
     generatedPlayer,
-    generatedSequences.map((s, i) => {
-      const isDrum = i >= generatedMelodySequences.length;
-      let se: soundEffect.SoundEffect;
-      if (isDrum) {
-        const t = random.select(["hit", "hit", "click", "click", "explosion"]);
-        se = soundEffect.add(
-          t,
-          random.getInt(999999999),
-          t === "explosion" ? 1 : 2,
-          t === "explosion" ? 0.04 : 0.05,
-          random.get(100, 200),
-          t === "explosion" ? 0.5 : 1,
-          t === "explosion" ? 0.2 : 1
-        );
-      } else {
-        const al = calcNoteLengthAverage(s);
-        const t =
-          random.get() < 1 / al
-            ? "select"
-            : random.select(["tone", "tone", "synth"]);
-        se = soundEffect.add(
-          t,
-          random.getInt(999999999),
-          t !== "select" ? 1 : 2,
-          t === "tone" ? 0.03 : t === "synth" ? 0.04 : 0.025,
-          261.6,
-          t !== "select" ? 0.1 : 1,
-          t !== "select" ? 2 : 1
-        );
-      }
-      return {
-        soundEffect: se,
-        isDrum,
-      };
-    })
+    generatedSequences.map((s, i) =>
+      soundEffect.getForSequence(
+        s,
+        i >= generatedMelodySequences.length,
+        random.getInt(999999999)
+      )
+    )
   );
   player.setSequences(generatedPlayer, generatedSequences);
   progressBar.textContent = "Done.";
   progressBar.style.width = "100%";
   player.play(generatedPlayer);
   saveToStorage();
-}
-
-function calcNoteLengthAverage(s) {
-  let sl = 0;
-  s.notes.forEach((n) => {
-    sl += n.quantizedEndStep - n.quantizedStartStep;
-  });
-  return sl / s.notes.length;
 }
 
 const generatedStepsCountStorageKey = "ggg_steps_count";
@@ -205,22 +170,17 @@ const defaultTracks = [
 
 function setDefaultMml() {
   player.setTrackCount(originPlayer, defaultTracks.length);
-  player.setTrackSounds(
-    originPlayer,
-    defaultTracks.map((t) => {
-      const isDrum = t.isDrum;
-      return {
-        soundEffect: isDrum
-          ? soundEffect.add("hit", 1, 2, 0.05, 150)
-          : soundEffect.add("select", 1, 2, 0.025, 261.6),
-        isDrum,
-      };
-    })
-  );
-  player.setMmlStrings(
+  player.setSequencesFromMmlStrings(
     originPlayer,
     defaultTracks.map((t) => t.mml)
   );
+  player.setTrackSoundEffects(
+    originPlayer,
+    defaultTracks.map((t, i) =>
+      soundEffect.getForSequence(originPlayer.tracks[i].sequence, t.isDrum, 1)
+    )
+  );
+  player.setPartsAndVisualizers(originPlayer);
 }
 
 function init() {
