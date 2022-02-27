@@ -236,7 +236,7 @@ export function setMmlStrings(player: Player, mmlStrings: string[]) {
 
 export function setSequences(player: Player, sequences) {
   player.tracks.forEach((t, i) => {
-    setSequence(t, sequences[i], player.notesStepsCount);
+    setSequence(t, sequences[i]);
   });
   setPartsAndVisualizers(player);
 }
@@ -291,7 +291,7 @@ export function stop(player: Player) {
 function setFromMmlInputs(player: Player) {
   player.tracks.forEach((t) => {
     t.mml = t.mmlInput.value;
-    setSequence(t, createSequence(t.mml), player.notesStepsCount);
+    setSequence(t, createSequence(t.mml));
   });
   setPartsAndVisualizers(player);
 }
@@ -302,10 +302,7 @@ function setPartsAndVisualizers(player: Player) {
       ? player.generatedNotesStepsCount
       : 0;
   player.tracks.forEach((t) => {
-    const stepsCount =
-      t.sequence.totalQuantizedSteps != null
-        ? t.sequence.totalQuantizedSteps
-        : t.sequence.totalTime / timePerStep;
+    const stepsCount = calcStepsCount(t.sequence);
     if (stepsCount > player.notesStepsCount) {
       player.notesStepsCount = stepsCount;
     }
@@ -323,9 +320,15 @@ function setPartsAndVisualizers(player: Player) {
   player.stateTextInput.value = JSON.stringify(toJSON(player));
 }
 
-function setSequence(track: Track, sequence, notesStepsCount: number) {
+function calcStepsCount(sequence) {
+  return sequence.totalQuantizedSteps != null
+    ? sequence.totalQuantizedSteps
+    : sequence.totalTime / timePerStep;
+}
+
+function setSequence(track: Track, sequence) {
   track.sequence = sequence;
-  track.mml = track.mmlInput.value = sequenceToMml(sequence, notesStepsCount);
+  track.mml = track.mmlInput.value = sequenceToMml(sequence);
 }
 
 function createSequence(mml: string) {
@@ -367,8 +370,9 @@ const durationToNoteLength = [
   ["2.", "8."],
 ];
 
-function sequenceToMml(seq, notesStepsCount: number) {
-  const notes = seq.notes.map((n) => {
+function sequenceToMml(sequence) {
+  const notesStepsCount = calcStepsCount(sequence);
+  const notes = sequence.notes.map((n) => {
     return {
       ...midiNoteNumberToMml(n.pitch),
       start: n.quantizedStartStep,
@@ -525,5 +529,4 @@ export function fromJSON(player: Player, json) {
   setTrackSounds(player, tracksSounds);
   const mmlStrings = parts.map((p) => p.mml);
   setMmlStrings(player, mmlStrings);
-  player.notesStepsCount = json.notesStepsCount;
 }
