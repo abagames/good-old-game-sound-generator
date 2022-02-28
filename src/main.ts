@@ -141,15 +141,23 @@ function loadFromStorage() {
     const stepsCount = localStorage.getItem(generatedStepsCountStorageKey);
     generatedStepsCountTextInput.value =
       stepsCount == null ? `${defaultGeneratedNotesStepsCount}` : stepsCount;
-    const generatedPlayerJson = localStorage.getItem(generatedPlayerStorageKey);
-    if (generatedPlayerJson != null) {
-      player.fromMmlStrings(generatedPlayer, JSON.parse(generatedPlayerJson));
-      generatedPlayer.stateTextInput.value = generatedPlayerJson;
+    const generatedPlayerMmlStrings = localStorage.getItem(
+      generatedPlayerStorageKey
+    );
+    if (
+      generatedPlayerMmlStrings != null &&
+      generatedPlayerMmlStrings.length > 0
+    ) {
+      player.fromMmlStrings(
+        generatedPlayer,
+        JSON.parse(generatedPlayerMmlStrings)
+      );
+      generatedPlayer.stateTextInput.value = generatedPlayerMmlStrings;
     }
-    const originPlayerJson = localStorage.getItem(originPlayerStorageKey);
-    if (originPlayerJson != null) {
-      player.fromMmlStrings(originPlayer, JSON.parse(originPlayerJson));
-      originPlayer.stateTextInput.value = originPlayerJson;
+    const originPlayerMmlStrings = localStorage.getItem(originPlayerStorageKey);
+    if (originPlayerMmlStrings != null) {
+      player.fromMmlStrings(originPlayer, JSON.parse(originPlayerMmlStrings));
+      originPlayer.stateTextInput.value = originPlayerMmlStrings;
     } else {
       setDefaultMml();
     }
