@@ -1,11 +1,12 @@
 declare module ggg {
-  // Play music described in MML JSON data
+  // Play music described in MML
+  // The volume can be specified with the second argument (default = 1)
   function playMml(mmlStrings: string[], volume?: number): void;
   // Stop music
   function stopMml(): void;
   // Play the sound effect
   function playSoundEffect(
-    type:
+    type?:
       | "coin"
       | "laser"
       | "explosion"

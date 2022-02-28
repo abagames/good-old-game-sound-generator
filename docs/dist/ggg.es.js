@@ -1623,10 +1623,10 @@ const types = [
   "hit",
   "jump",
   "select",
+  "random",
   "synth",
   "tone",
-  "click",
-  "random"
+  "click"
 ];
 const typeFunctionNames = {
   coin: "Coin",
@@ -1636,10 +1636,10 @@ const typeFunctionNames = {
   hit: "Hit",
   jump: "Jump",
   select: "Select",
+  random: "Lucky",
   synth: "Synth",
   tone: "Tone",
-  click: "Click",
-  random: "Lucky"
+  click: "Click"
 };
 const jsfxRandom = new Random();
 let soundEffects$1;
@@ -1659,9 +1659,10 @@ function update$2() {
   });
 }
 function get$1(type, seed, count = 2, volume = 0.05, freq = void 0, attackRatio = 1, sustainRatio = 1) {
-  const params = times(count, (i) => {
-    jsfxRandom.setSeed(seed + i * 1063);
-    const p = jsfx.Preset[typeFunctionNames[type]]();
+  jsfxRandom.setSeed(seed);
+  const preset = jsfx.Preset[typeFunctionNames[type != null ? type : types[jsfxRandom.getInt(8)]]];
+  const params = times(count, () => {
+    const p = preset();
     if (freq != null && p.Frequency.Start != null) {
       p.Frequency.Start = freq;
     }
@@ -1720,11 +1721,19 @@ function getForSequence(sequence, isDrum, seed, type, volume) {
   return se;
 }
 function calcNoteLengthAverage(sequence) {
+  if (sequence == null || sequence.notes.length === 0) {
+    return 1;
+  }
   let sl = 0;
+  let nc = 0;
   sequence.notes.forEach((n) => {
-    sl += n.quantizedEndStep - n.quantizedStartStep;
+    const o = n.quantizedEndStep - n.quantizedStartStep;
+    if (o > 0) {
+      sl += o;
+      nc++;
+    }
   });
-  return sl / sequence.notes.length;
+  return sl / nc;
 }
 function add(se) {
   soundEffects$1.push(se);
@@ -1910,10 +1919,10 @@ function playMml(mmlStrings, volume = 1) {
 function stopMml() {
   stop();
 }
-function playSoundEffect(type, seed = void 0, count = 2, volume = 0.05, freq = void 0) {
+function playSoundEffect(type = void 0, seed = void 0, count = 2, volume = 1, freq = void 0) {
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;
   if (soundEffects[key] == null) {
-    const se = get$1(type, seed == null ? baseRandomSeed : seed, count, volume, freq);
+    const se = get$1(type, seed == null ? baseRandomSeed : seed, count, 0.05 * volume, freq);
     add(se);
     soundEffects[key] = se;
   }

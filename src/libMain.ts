@@ -43,10 +43,10 @@ export function stopMml() {
 }
 
 export function playSoundEffect(
-  type: soundEffect.Type,
+  type: soundEffect.Type = undefined,
   seed: number = undefined,
   count: number = 2,
-  volume: number = 0.05,
+  volume: number = 1,
   freq: number = undefined
 ) {
   const key = `${type}_${seed}_${count}_${volume}_${freq}`;
@@ -55,7 +55,7 @@ export function playSoundEffect(
       type,
       seed == null ? baseRandomSeed : seed,
       count,
-      volume,
+      0.05 * volume,
       freq
     );
     soundEffect.add(se);
