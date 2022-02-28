@@ -24,10 +24,10 @@ export const types = [
   "hit",
   "jump",
   "select",
+  "random",
   "synth",
   "tone",
   "click",
-  "random",
 ] as const;
 export type Type = typeof types[number];
 const typeFunctionNames = {
@@ -38,10 +38,10 @@ const typeFunctionNames = {
   hit: "Hit",
   jump: "Jump",
   select: "Select",
+  random: "Lucky",
   synth: "Synth",
   tone: "Tone",
   click: "Click",
-  random: "Lucky",
 };
 
 const jsfxRandom = new Random();
@@ -74,9 +74,13 @@ export function get(
   attackRatio: number = 1,
   sustainRatio: number = 1
 ): SoundEffect {
-  const params = times(count, (i) => {
-    jsfxRandom.setSeed(seed + i * 1063);
-    const p = jsfx.Preset[typeFunctionNames[type]]();
+  jsfxRandom.setSeed(seed);
+  const preset =
+    jsfx.Preset[
+      typeFunctionNames[type != null ? type : types[jsfxRandom.getInt(8)]]
+    ];
+  const params = times(count, () => {
+    const p = preset();
     if (freq != null && p.Frequency.Start != null) {
       p.Frequency.Start = freq;
     }
@@ -169,11 +173,19 @@ export function getForSequence(
 }
 
 function calcNoteLengthAverage(sequence) {
+  if (sequence == null || sequence.notes.length === 0) {
+    return 1;
+  }
   let sl = 0;
+  let nc = 0;
   sequence.notes.forEach((n) => {
-    sl += n.quantizedEndStep - n.quantizedStartStep;
+    const o = n.quantizedEndStep - n.quantizedStartStep;
+    if (o > 0) {
+      sl += o;
+      nc++;
+    }
   });
-  return sl / sequence.notes.length;
+  return sl / nc;
 }
 
 export function add(se: SoundEffect) {
