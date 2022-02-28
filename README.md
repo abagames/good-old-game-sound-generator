@@ -25,7 +25,7 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 
 ## Sample code
 
-[BALL TOUR source code](https://github.com/abagames/good-old-game-sound-generator/blob/main/docs/samples/balltour/main.js)
+[BALL TOUR source code](https://github.com/abagames/good-old-game-sound-generator/blob/main/docs/samples/balltour/main.js) uses [crisp-game-lib](https://github.com/abagames/crisp-game-lib).
 
 ```javascript
 title = "BALL TOUR";
@@ -51,9 +51,8 @@ function update() {
   if (!ticks) {
     if (!isReplaying) {
       // Play BGM at the start of the game.
-      // The 'bgm' variable is assigned the JSON data copied from the clipboard.
-      // The volume can be specified with the second argument. (default = 0.1)
-      ggg.playMml(bgm, 0.2);
+      // The 'bgm' variable is assigned MML string copied from the clipboard.
+      ggg.playMml(bgm);
     }
     player = { pos: vec(90, 50), yAngle: 0, vx: 0, ticks: 0 };
     spikes = [];
@@ -89,8 +88,8 @@ function update() {
   player.pos.y = sin(player.yAngle) * 30 + 50;
   player.ticks += clamp((py - player.pos.y) * 9 + 1, 0, 9);
   if (input.isJustPressed) {
-    // Play the `select` sound effect.
-    ggg.playSoundEffect("select");
+    // Play the `hit` sound effect.
+    ggg.playSoundEffect("hit");
   }
   player.vx = (input.isPressed ? 1 : 0.1) * difficulty;
   char(addWithCharCode("a", floor(player.ticks / 50) % 2), player.pos);
@@ -118,8 +117,8 @@ function update() {
     if (c.a || c.b || c.c) {
       addScore(floor(multiplier), player.pos);
       multiplier += 10;
-      // Play the `coin` sound effect.
-      ggg.playSoundEffect("coin");
+      // Play the `select` sound effect.
+      ggg.playSoundEffect("select");
       return true;
     }
     return b.x > 103;
@@ -140,9 +139,9 @@ function gameOver() {
 function init() {
   // Initialize the library by giving a random number seed for
   // sound effect generation as an argument.
-  ggg.init(6);
+  ggg.init(3);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
-    window.addEventListener(e, () => {
+    document.addEventListener(e, () => {
       // Calling the `startAudio` function from within the event handler of
       // a user operation will enable audio.
       ggg.startAudio();
@@ -152,21 +151,31 @@ function init() {
 
 window.addEventListener("load", init);
 
-// MML JSON data for BGM.
-const bgm = {
-// ... snip ....
+// MML for BGM.
+const bgm = [
+  // Specify the tone as `@synth`.
+  // `@s308454596`sets the random number seed to generate the tone.
+  "@synth@s308454596 v50 l16 o4 r4b4 >c+erer8.<b b2 >c+2 <b2 >c+ec+<ar>c+r<a f+g+af+rf+er e2",
+  "@synth@s771118616 v35 l4 o4 f+f+ f+1 >c+ <g+ f+f+ eg+ ab b2",
+  "@synth@s848125671 v40 l4 o4 d+16d+16f+16e16e16e16e16<b16 >ee b8.b16r8>f+8 c+c+ <b>f+ <aa a2 bb",
+  // Set the drum part with '@d'.
+  "@explosion@d@s364411560 v40 l16 o4 cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8.",
+  "@explosion@d@s152275772 v40 l16 o4 r8crcrcr8. cccrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr",
+  "@hit@d@s234851483 v50 l16 o4 rcr4^16c rcr4. ccr4^16c rcr4.^16 cr4^16c rcr4.^16 cr4^16c rcr4.",
+];
 ```
 
 ## Functions
 
 ```typescript
-// Play music described in MML JSON data
-function playMml(mmlData: MmlData, volume?: number): void;
+// Play music described in MML
+// The volume can be specified with the second argument (default = 1)
+function playMml(mmlStrings: string[], volume?: number): void;
 // Stop music
 function stopMml(): void;
 // Play the sound effect
 function playSoundEffect(
-  type:
+  type?:
     | "coin"
     | "laser"
     | "explosion"
@@ -190,7 +199,7 @@ function update(): void;
 // the seed of the random number used to generate the sound effect)
 function init(baseRandomSeed?: number, audioContext?: AudioContext): void;
 // The startAudio function needs to be called from within
-// the user operation event handler to enable audio playback in the browser.
+// the user operation event handler to enable audio playback in the browser
 function startAudio(): void;
 // Set the tempo of the music
 function setTempo(tempo?: number): void;
