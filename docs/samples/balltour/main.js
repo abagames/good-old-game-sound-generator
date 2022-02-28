@@ -52,9 +52,8 @@ function update() {
   if (!ticks) {
     if (!isReplaying) {
       // Play BGM at the start of the game.
-      // The 'bgm' variable is assigned the JSON data copied from the clipboard.
-      // The volume can be specified with the second argument. (default = 0.1)
-      ggg.playMml(bgm, 0.2);
+      // The 'bgm' variable is assigned MML string copied from the clipboard.
+      ggg.playMml(bgm);
     }
     player = { pos: vec(90, 50), yAngle: 0, vx: 0, ticks: 0 };
     spikes = [];
@@ -90,8 +89,8 @@ function update() {
   player.pos.y = sin(player.yAngle) * 30 + 50;
   player.ticks += clamp((py - player.pos.y) * 9 + 1, 0, 9);
   if (input.isJustPressed) {
-    // Play the `select` sound effect.
-    ggg.playSoundEffect("select");
+    // Play the `hit` sound effect.
+    ggg.playSoundEffect("hit");
   }
   player.vx = (input.isPressed ? 1 : 0.1) * difficulty;
   char(addWithCharCode("a", floor(player.ticks / 50) % 2), player.pos);
@@ -119,8 +118,8 @@ function update() {
     if (c.a || c.b || c.c) {
       addScore(floor(multiplier), player.pos);
       multiplier += 10;
-      // Play the `coin` sound effect.
-      ggg.playSoundEffect("coin");
+      // Play the `select` sound effect.
+      ggg.playSoundEffect("select");
       return true;
     }
     return b.x > 103;
@@ -141,7 +140,7 @@ function gameOver() {
 function init() {
   // Initialize the library by giving a random number seed for
   // sound effect generation as an argument.
-  ggg.init(6);
+  ggg.init(3);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
     document.addEventListener(e, () => {
       // Calling the `startAudio` function from within the event handler of
@@ -153,164 +152,15 @@ function init() {
 
 window.addEventListener("load", init);
 
-// MML JSON data for BGM.
-const bgm = {
-  parts: [
-    {
-      mml: "l16 o3 f+8f+f+f+8f+e f+1 r br>c8rc+c8 rc<b8.>c+<b r>c+f+f+2.^8.",
-      soundEffect: {
-        type: "synth",
-        params: [
-          {
-            Frequency: { Start: 261.6 },
-            Generator: { Func: "saw", A: 0.8716629256661197 },
-            Volume: {
-              Attack: 0,
-              Sustain: 1.9943911731230075,
-              Punch: 0.0814976066075027,
-              Decay: 0.6290331843143873,
-            },
-          },
-        ],
-        volume: 0.04,
-      },
-      isDrum: false,
-    },
-    {
-      mml: "l4 o4 r2 f+f+ f+8r8f+1",
-      soundEffect: {
-        type: "synth",
-        params: [
-          {
-            Frequency: { Start: 261.6 },
-            Generator: { Func: "saw", A: 0.6970408271758447 },
-            Volume: {
-              Attack: 0,
-              Sustain: 1.2583366723866987,
-              Punch: 0.2931877487090388,
-              Decay: 0.16856516950497524,
-            },
-          },
-        ],
-        volume: 0.04,
-      },
-      isDrum: false,
-    },
-    {
-      mml: "l16 o4 cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.c",
-      soundEffect: {
-        type: "hit",
-        params: [
-          {
-            Frequency: {
-              Start: 106.41011782139775,
-              Slide: -0.3791780821232074,
-            },
-            Generator: {
-              Func: "saw",
-              A: 0.13738496977309345,
-              ASlide: 0.03646126122597171,
-            },
-            Filter: { HP: 0.023415383515743394 },
-            Volume: {
-              Sustain: 0.09693810066602615,
-              Decay: 0.27297980635729147,
-            },
-          },
-          {
-            Frequency: {
-              Start: 106.41011782139775,
-              Slide: -0.4378967092693543,
-            },
-            Generator: {
-              Func: "saw",
-              A: 0.28715216943229366,
-              ASlide: 0.3690589440215982,
-            },
-            Volume: {
-              Sustain: 0.0031239091193126303,
-              Decay: 0.10987028847678339,
-            },
-          },
-        ],
-        volume: 0.05,
-      },
-      isDrum: true,
-    },
-    {
-      mml: "l16 o4 rcr4^16c rcr4.^16 cr4^16c rcr4.^16 cr4^16c rcr4.^16 cr4^16c rc",
-      soundEffect: {
-        type: "click",
-        params: [
-          {
-            Frequency: { Start: 108.1473764749587, Slide: 0.1453852235910914 },
-            Generator: {
-              Func: "saw",
-              A: 0.5430990815030176,
-              ASlide: -0.3253812691721556,
-            },
-            Filter: { HP: 0.021106156478893513 },
-            Volume: {
-              Sustain: 0.013134795372522722,
-              Decay: 0.058677021103531436,
-            },
-          },
-          {
-            Frequency: {
-              Start: 108.1473764749587,
-              Slide: -0.23950459988310574,
-            },
-            Generator: {
-              Func: "saw",
-              A: 0.18758877040529362,
-              ASlide: -0.3577890116390281,
-            },
-            Filter: { HP: 0.1963873411986016 },
-            Volume: {
-              Sustain: 0.010876404040571757,
-              Decay: 0.10226421674875319,
-            },
-          },
-        ],
-        volume: 0.05,
-      },
-      isDrum: true,
-    },
-    {
-      mml: "l16 o4 r8cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.c",
-      soundEffect: {
-        type: "click",
-        params: [
-          {
-            Frequency: {
-              Start: 194.94672336032306,
-              Slide: -0.44396584055944477,
-            },
-            Generator: {
-              Func: "saw",
-              A: 0.01724358452885495,
-              ASlide: 0.49086691927883475,
-            },
-            Filter: { HP: 0.0271003732520855 },
-            Volume: { Sustain: 0.0189983426971502, Decay: 0.0511840462379394 },
-          },
-          {
-            Frequency: {
-              Start: 194.94672336032306,
-              Slide: -0.0408363086033697,
-            },
-            Generator: { Func: "noise" },
-            Volume: {
-              Sustain: 0.06844298263339794,
-              Decay: 0.13184771524604505,
-              Punch: 0.27086158089126966,
-            },
-          },
-        ],
-        volume: 0.05,
-      },
-      isDrum: true,
-    },
-  ],
-  notesStepsCount: 64,
-};
+// MML for BGM.
+const bgm = [
+  // Specify the tone as `@synth`.
+  // `@s308454596`sets the random number seed to generate the tone.
+  "@synth@s308454596 v50 l16 o4 r4b4 >c+erer8.<b b2 >c+2 <b2 >c+ec+<ar>c+r<a f+g+af+rf+er e2",
+  "@synth@s771118616 v35 l4 o4 f+f+ f+1 >c+ <g+ f+f+ eg+ ab b2",
+  "@synth@s848125671 v40 l4 o4 d+16d+16f+16e16e16e16e16<b16 >ee b8.b16r8>f+8 c+c+ <b>f+ <aa a2 bb",
+  // Set the drum part with '@d'.
+  "@explosion@d@s364411560 v40 l16 o4 cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8. cr8.cr8.",
+  "@explosion@d@s152275772 v40 l16 o4 r8crcrcr8. cccrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr8. crcrcr",
+  "@hit@d@s234851483 v50 l16 o4 rcr4^16c rcr4. ccr4^16c rcr4.^16 cr4^16c rcr4.^16 cr4^16c rcr4.",
+];
