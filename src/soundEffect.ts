@@ -1,5 +1,9 @@
 import { jsfx } from "../lib/jsfx/index";
-import { audioContext, getQuantizedTime } from "./audio";
+import {
+  audioContext,
+  getQuantizedTime,
+  volume as masterVolume,
+} from "./audio";
 import { Random } from "./random";
 import { times } from "./util";
 
@@ -44,14 +48,14 @@ const typeFunctionNames = {
   click: "Click",
 };
 
-const jsfxRandom = new Random();
+export const random = new Random();
 let soundEffects: SoundEffect[];
 let live;
 
 export function init() {
   live = jsfx.Live();
   soundEffects = [];
-  jsfx.setRandomFunc(() => jsfxRandom.get());
+  jsfx.setRandomFunc(() => random.get());
 }
 
 export function play(soundEffect: SoundEffect) {
@@ -66,20 +70,22 @@ export function update() {
 }
 
 export function get(
-  type: Type,
-  seed: number,
-  count = 2,
+  type: Type = undefined,
+  seed: number = undefined,
+  numberOfSounds = 2,
   volume = 0.05,
   freq: number = undefined,
   attackRatio: number = 1,
   sustainRatio: number = 1
 ): SoundEffect {
-  jsfxRandom.setSeed(seed);
+  if (seed != null) {
+    random.setSeed(seed);
+  }
   const preset =
     jsfx.Preset[
-      typeFunctionNames[type != null ? type : types[jsfxRandom.getInt(8)]]
+      typeFunctionNames[type != null ? type : types[random.getInt(8)]]
     ];
-  const params = times(count, () => {
+  const params = times(numberOfSounds, () => {
     const p = preset();
     if (freq != null && p.Frequency.Start != null) {
       p.Frequency.Start = freq;
@@ -104,7 +110,7 @@ function createBuffers(type: Type, params, volume: number): SoundEffect {
     return buffer;
   });
   const gainNode = audioContext.createGain();
-  gainNode.gain.value = volume;
+  gainNode.gain.value = volume * masterVolume;
   gainNode.connect(audioContext.destination);
   return {
     type,
@@ -137,7 +143,7 @@ export function getForSequence(
       t,
       random.getInt(999999999),
       t === "explosion" ? 1 : 2,
-      volume != null ? volume : t === "explosion" ? 0.04 : 0.05,
+      volume != null ? volume : t === "explosion" ? 0.4 : 0.5,
       random.get(100, 200),
       t === "explosion" ? 0.5 : 1,
       t === "explosion" ? 0.2 : 1
@@ -155,13 +161,7 @@ export function getForSequence(
       t,
       random.getInt(999999999),
       t !== "select" ? 1 : 2,
-      volume != null
-        ? volume
-        : t === "tone"
-        ? 0.03
-        : t === "synth"
-        ? 0.04
-        : 0.025,
+      volume != null ? volume : t === "tone" ? 0.3 : t === "synth" ? 0.4 : 0.25,
       261.6,
       t !== "select" ? 0.1 : 1,
       t !== "select" ? 2 : 1
@@ -250,7 +250,7 @@ export function stop(soundEffect: SoundEffect, when: number = undefined) {
   }
 }
 
-const volumeMultiplier = 1000;
+const volumeMultiplier = 100;
 
 export function toMml(soundEffect: SoundEffect) {
   return `@${soundEffect.type}${soundEffect.isDrum ? "@d" : ""}@s${

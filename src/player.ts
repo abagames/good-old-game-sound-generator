@@ -3,6 +3,7 @@ declare const mm: any;
 import { start as startAudio } from "./audio";
 import MMLIterator from "mml-iterator";
 import { cloneDeep, times } from "./util";
+import * as track from "./track";
 import * as part from "./part";
 import * as soundEffect from "./soundEffect";
 
@@ -232,10 +233,13 @@ export function play(player: Player) {
   setFromMmlInputs(player);
   setPartsAndVisualizers(player);
   player.isPlaying = true;
-  part.play(
+  track.init();
+  const t = track.get(
     player.tracks.map((t) => t.part),
     player.notesStepsCount
   );
+  track.add(t);
+  track.play(t, true);
   player.playButton.textContent = "Stop";
 }
 
@@ -244,7 +248,7 @@ export function stop(player: Player) {
     return;
   }
   player.isPlaying = false;
-  part.stop();
+  track.stopAll();
   player.tracks.forEach((t) => {
     if (t.visualizer != null) {
       t.visualizer.redraw();

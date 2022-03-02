@@ -1,20 +1,37 @@
 import MMLIterator from "mml-iterator";
+import * as track from "./track";
+import * as part from "./part";
+import * as soundEffect from "./soundEffect";
 import {
   init as initAudio,
   setTempo,
   setQuantize,
+  setVolume,
+  playEmpty,
+  resumeAudioContext,
   start as startAudio,
 } from "./audio";
-import * as soundEffect from "./soundEffect";
-import * as part from "./part";
 
-export { setTempo, setQuantize, startAudio };
+export {
+  setTempo,
+  setQuantize,
+  setVolume,
+  playEmpty,
+  resumeAudioContext,
+  startAudio,
+};
 
 const mmlQuantizeInterval = 0.125;
 let baseRandomSeed;
 let soundEffects: { [key: string]: soundEffect.SoundEffect };
+let mmlTrack: track.Track;
 
-export function playMml(mmlStrings: string[], volume: number = 1) {
+export function playMml(
+  mmlStrings: string[],
+  volume = 1,
+  speed = 1,
+  isLooping = true
+) {
   let notesStepsCount = 0;
   const tracks = mmlStrings.map((ms) => soundEffect.fromMml(ms));
   tracks.forEach((t) => {
@@ -35,27 +52,34 @@ export function playMml(mmlStrings: string[], volume: number = 1) {
     );
     return part.get(mml, sequence, se);
   });
-  part.play(parts, notesStepsCount);
+  mmlTrack = track.get(parts, notesStepsCount, speed);
+  track.add(mmlTrack);
+  track.play(mmlTrack, isLooping);
 }
 
 export function stopMml() {
-  part.stop();
+  if (mmlTrack == null) {
+    return;
+  }
+  track.stop(mmlTrack);
+  track.remove(mmlTrack);
+  mmlTrack = undefined;
 }
 
 export function playSoundEffect(
   type: soundEffect.Type = undefined,
   seed: number = undefined,
-  count: number = 2,
+  numberOfSounds: number = 2,
   volume: number = 1,
   freq: number = undefined
 ) {
-  const key = `${type}_${seed}_${count}_${volume}_${freq}`;
+  const key = `${type}_${seed}_${numberOfSounds}_${volume}_${freq}`;
   if (soundEffects[key] == null) {
     const se = soundEffect.get(
       type,
       seed == null ? baseRandomSeed : seed,
-      count,
-      0.05 * volume,
+      numberOfSounds,
+      volume,
       freq
     );
     soundEffect.add(se);
@@ -65,18 +89,28 @@ export function playSoundEffect(
 }
 
 export function update() {
-  part.update();
+  track.update();
   soundEffect.update();
 }
 
 export function init(
-  _baseRandomSeed = 1,
+  baseRandomSeed = 1,
   audioContext: AudioContext = undefined
 ) {
-  baseRandomSeed = _baseRandomSeed;
+  setSeed(baseRandomSeed);
   initAudio(audioContext);
+  reset();
+}
+
+export function reset() {
+  track.init();
   soundEffect.init();
   soundEffects = {};
+  stopMml();
+}
+
+export function setSeed(_baseRandomSeed = 1) {
+  baseRandomSeed = _baseRandomSeed;
 }
 
 function getNotesStepsCount(mml: string) {
@@ -100,7 +134,7 @@ function mmlToQuantizedSequence(mml: string, notesStepsCount: number) {
       notes.push({
         pitch: ne.noteNumber,
         quantizedStartStep: Math.floor(ne.time / mmlQuantizeInterval),
-        endStep,
+        quantizedEndStep: endStep,
       });
     }
   }

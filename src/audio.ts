@@ -2,6 +2,7 @@ export let audioContext: AudioContext;
 export let tempo: number;
 export let playInterval: number;
 export let quantize: number;
+export let volume: number;
 let isStarted = false;
 
 export function init(_audioContext: AudioContext = undefined) {
@@ -11,6 +12,7 @@ export function init(_audioContext: AudioContext = undefined) {
       : _audioContext;
   setTempo();
   setQuantize();
+  setVolume();
 }
 
 export function start() {
@@ -18,16 +20,20 @@ export function start() {
     return;
   }
   isStarted = true;
-  playEmptyBuffer();
+  playEmpty();
 }
 
-export function setTempo(_tempo: number = 150) {
+export function setTempo(_tempo = 120) {
   tempo = _tempo;
   playInterval = 60 / tempo;
 }
 
-export function setQuantize(noteLength: number = 8) {
+export function setQuantize(noteLength = 8) {
   quantize = 4 / noteLength;
+}
+
+export function setVolume(_volume = 0.1) {
+  volume = _volume;
 }
 
 export function getQuantizedTime(time: number) {
@@ -35,8 +41,12 @@ export function getQuantizedTime(time: number) {
   return interval > 0 ? Math.ceil(time / interval) * interval : time;
 }
 
-function playEmptyBuffer() {
+export function playEmpty() {
   const bufferSource = audioContext.createBufferSource();
   bufferSource.start = bufferSource.start || (bufferSource as any).noteOn;
   bufferSource.start();
+}
+
+export function resumeAudioContext() {
+  audioContext.resume();
 }

@@ -1,6 +1,6 @@
-import { init as initAudio } from "./audio";
+import { init as initAudio, setTempo } from "./audio";
 import * as soundEffect from "./soundEffect";
-import * as part from "./part";
+import * as track from "./track";
 import * as player from "./player";
 import * as generator from "./generator";
 import { cloneDeep } from "./util";
@@ -16,7 +16,7 @@ const defaultGeneratedNotesStepsCount = 64;
 
 function update() {
   requestAnimationFrame(update);
-  part.update();
+  track.update();
   soundEffect.update();
 }
 
@@ -184,6 +184,7 @@ function setDefaultMml() {
 
 function init() {
   initAudio();
+  setTempo(150);
   soundEffect.init();
   generator.init();
   generatedPlayer = player.get(document.getElementById("main"), () => {
