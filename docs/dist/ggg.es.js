@@ -661,39 +661,6 @@ function isNoteEvent(command) {
 }
 var MMLIterator_1 = MMLIterator;
 var lib = MMLIterator_1;
-let audioContext;
-let tempo;
-let playInterval;
-let quantize;
-let isStarted = false;
-function init$2(_audioContext = void 0) {
-  audioContext = _audioContext == null ? new (window.AudioContext || window.webkitAudioContext)() : _audioContext;
-  setTempo();
-  setQuantize();
-}
-function start() {
-  if (isStarted) {
-    return;
-  }
-  isStarted = true;
-  playEmptyBuffer();
-}
-function setTempo(_tempo = 150) {
-  tempo = _tempo;
-  playInterval = 60 / tempo;
-}
-function setQuantize(noteLength = 8) {
-  quantize = 4 / noteLength;
-}
-function getQuantizedTime(time) {
-  const interval = playInterval * quantize;
-  return interval > 0 ? Math.ceil(time / interval) * interval : time;
-}
-function playEmptyBuffer() {
-  const bufferSource = audioContext.createBufferSource();
-  bufferSource.start = bufferSource.start || bufferSource.noteOn;
-  bufferSource.start();
-}
 var jsfx = {};
 (function(jsfx2) {
   var TAU = +Math.PI * 2;
@@ -949,7 +916,7 @@ var jsfx = {};
       $.guitarHead = 0;
       var B = $.guitarBuffer;
       for (var i = 0; i < B.length; i++) {
-        B[i] = random() * 2 - 1;
+        B[i] = random2() * 2 - 1;
       }
     },
     process: function($, block) {
@@ -1306,9 +1273,9 @@ var jsfx = {};
         map_object(defs, function(def, name) {
           if (def.C) {
             var values = Object_keys(def.C);
-            out[name] = values[values.length * random() | 0];
+            out[name] = values[values.length * random2() | 0];
           } else {
-            out[name] = random() * (def.H - def.L) + def.L;
+            out[name] = random2() * (def.H - def.L) + def.L;
           }
         });
       });
@@ -1370,7 +1337,7 @@ var jsfx = {};
       var BM = BS - 1;
       var buffer = createFloatArray(BS);
       for (var i = 0; i < buffer.length; i++) {
-        buffer[i] = random() * 2 - 1;
+        buffer[i] = random2() * 2 - 1;
       }
       var head = 0;
       return function($, block) {
@@ -1509,7 +1476,7 @@ var jsfx = {};
     return r;
   }
   function runif(scale, offset) {
-    var a = random();
+    var a = random2();
     if (scale !== void 0)
       a *= scale;
     if (offset !== void 0)
@@ -1517,7 +1484,7 @@ var jsfx = {};
     return a;
   }
   function rchoose(gens) {
-    return gens[gens.length * random() | 0];
+    return gens[gens.length * random2() | 0];
   }
   function Object_keys(obj) {
     var r = [];
@@ -1549,10 +1516,51 @@ var jsfx = {};
   jsfx2.setRandomFunc = function(func) {
     randomFunc = func;
   };
-  function random() {
+  function random2() {
     return randomFunc();
   }
 })(jsfx = {});
+let audioContext;
+let tempo;
+let playInterval;
+let quantize;
+let volume;
+let isStarted = false;
+function init$3(_audioContext = void 0) {
+  audioContext = _audioContext == null ? new (window.AudioContext || window.webkitAudioContext)() : _audioContext;
+  setTempo();
+  setQuantize();
+  setVolume();
+}
+function start() {
+  if (isStarted) {
+    return;
+  }
+  isStarted = true;
+  playEmpty();
+}
+function setTempo(_tempo = 120) {
+  tempo = _tempo;
+  playInterval = 60 / tempo;
+}
+function setQuantize(noteLength = 8) {
+  quantize = 4 / noteLength;
+}
+function setVolume(_volume = 0.1) {
+  volume = _volume;
+}
+function getQuantizedTime(time) {
+  const interval = playInterval * quantize;
+  return interval > 0 ? Math.ceil(time / interval) * interval : time;
+}
+function playEmpty() {
+  const bufferSource = audioContext.createBufferSource();
+  bufferSource.start = bufferSource.start || bufferSource.noteOn;
+  bufferSource.start();
+}
+function resumeAudioContext() {
+  audioContext.resume();
+}
 class Random {
   constructor(seed = null) {
     __publicField(this, "x");
@@ -1641,27 +1649,29 @@ const typeFunctionNames = {
   tone: "Tone",
   click: "Click"
 };
-const jsfxRandom = new Random();
+const random = new Random();
 let soundEffects$1;
 let live;
-function init$1() {
+function init$2() {
   live = jsfx.Live();
   soundEffects$1 = [];
-  jsfx.setRandomFunc(() => jsfxRandom.get());
+  jsfx.setRandomFunc(() => random.get());
 }
 function play$1(soundEffect) {
   playSoundEffect$1(soundEffect);
 }
-function update$2() {
+function update$3() {
   const currentTime = audioContext.currentTime;
   soundEffects$1.forEach((se) => {
     updateSoundEffect(se, currentTime);
   });
 }
-function get$1(type, seed, count = 2, volume = 0.05, freq = void 0, attackRatio = 1, sustainRatio = 1) {
-  jsfxRandom.setSeed(seed);
-  const preset = jsfx.Preset[typeFunctionNames[type != null ? type : types[jsfxRandom.getInt(8)]]];
-  const params = times(count, () => {
+function get$2(type = void 0, seed = void 0, numberOfSounds = 2, volume2 = 0.05, freq = void 0, attackRatio = 1, sustainRatio = 1) {
+  if (seed != null) {
+    random.setSeed(seed);
+  }
+  const preset = jsfx.Preset[typeFunctionNames[type != null ? type : types[random.getInt(8)]]];
+  const params = times(numberOfSounds, () => {
     const p = preset();
     if (freq != null && p.Frequency.Start != null) {
       p.Frequency.Start = freq;
@@ -1674,9 +1684,9 @@ function get$1(type, seed, count = 2, volume = 0.05, freq = void 0, attackRatio 
     }
     return p;
   });
-  return createBuffers(type, params, volume);
+  return createBuffers(type, params, volume2);
 }
-function createBuffers(type, params, volume) {
+function createBuffers(type, params, volume$1) {
   const buffers = params.map((p) => {
     const values = live._generate(p);
     const buffer = audioContext.createBuffer(1, values.length, jsfx.SampleRate);
@@ -1685,12 +1695,12 @@ function createBuffers(type, params, volume) {
     return buffer;
   });
   const gainNode = audioContext.createGain();
-  gainNode.gain.value = volume;
+  gainNode.gain.value = volume$1 * volume;
   gainNode.connect(audioContext.destination);
   return {
     type,
     params,
-    volume,
+    volume: volume$1,
     buffers,
     bufferSourceNodes: void 0,
     gainNode,
@@ -1698,23 +1708,23 @@ function createBuffers(type, params, volume) {
     playedTime: void 0
   };
 }
-function getForSequence(sequence, isDrum, seed, type, volume) {
-  const random = new Random();
-  random.setSeed(seed);
+function getForSequence(sequence, isDrum, seed, type, volume2) {
+  const random2 = new Random();
+  random2.setSeed(seed);
   let se;
   if (isDrum) {
-    let t = random.select(["hit", "hit", "click", "click", "explosion"]);
+    let t = random2.select(["hit", "hit", "click", "click", "explosion"]);
     if (type != null) {
       t = type;
     }
-    se = get$1(t, random.getInt(999999999), t === "explosion" ? 1 : 2, volume != null ? volume : t === "explosion" ? 0.04 : 0.05, random.get(100, 200), t === "explosion" ? 0.5 : 1, t === "explosion" ? 0.2 : 1);
+    se = get$2(t, random2.getInt(999999999), t === "explosion" ? 1 : 2, volume2 != null ? volume2 : t === "explosion" ? 0.4 : 0.5, random2.get(100, 200), t === "explosion" ? 0.5 : 1, t === "explosion" ? 0.2 : 1);
   } else {
     const al = calcNoteLengthAverage(sequence);
-    let t = random.get() < 1 / al ? "select" : random.select(["tone", "tone", "synth"]);
+    let t = random2.get() < 1 / al ? "select" : random2.select(["tone", "tone", "synth"]);
     if (type != null) {
       t = type;
     }
-    se = get$1(t, random.getInt(999999999), t !== "select" ? 1 : 2, volume != null ? volume : t === "tone" ? 0.03 : t === "synth" ? 0.04 : 0.025, 261.6, t !== "select" ? 0.1 : 1, t !== "select" ? 2 : 1);
+    se = get$2(t, random2.getInt(999999999), t !== "select" ? 1 : 2, volume2 != null ? volume2 : t === "tone" ? 0.3 : t === "synth" ? 0.4 : 0.25, 261.6, t !== "select" ? 0.1 : 1, t !== "select" ? 2 : 1);
   }
   se.isDrum = isDrum;
   se.seed = seed;
@@ -1735,7 +1745,7 @@ function calcNoteLengthAverage(sequence) {
   });
   return sl / nc;
 }
-function add(se) {
+function add$1(se) {
   soundEffects$1.push(se);
 }
 function playSoundEffect$1(soundEffect) {
@@ -1779,7 +1789,7 @@ function stop$1(soundEffect, when = void 0) {
     soundEffect.bufferSourceNodes = void 0;
   }
 }
-const volumeMultiplier = 1e3;
+const volumeMultiplier = 100;
 function fromMml(mml) {
   let leftMml = `${mml}`;
   let type;
@@ -1805,14 +1815,14 @@ function fromMml(mml) {
     leftMml = leftMml.replace(/@s\d+/, "");
   }
   const vs = leftMml.match(/v\d+/);
-  let volume;
+  let volume2;
   if (vs != null) {
-    volume = Number.parseInt(vs[0].substring(1)) / volumeMultiplier;
+    volume2 = Number.parseInt(vs[0].substring(1)) / volumeMultiplier;
     leftMml = leftMml.replace(/v\d+/, "");
   }
-  return { mml: leftMml, args: { isDrum, seed, type, volume } };
+  return { mml: leftMml, args: { isDrum, seed, type, volume: volume2 } };
 }
-function get(mml, sequence, soundEffect2, visualizer) {
+function get$1(mml, sequence, soundEffect2, visualizer) {
   return {
     mml,
     sequence,
@@ -1822,58 +1832,15 @@ function get(mml, sequence, soundEffect2, visualizer) {
     visualizer
   };
 }
-let parts;
-let notesStepsCount;
-let notesStepsIndex;
-let noteInterval;
-let nextNotesTime;
-let isPlaying = false;
-function play(_parts, _notesStepsCount) {
-  parts = _parts;
-  notesStepsCount = _notesStepsCount;
-  notesStepsIndex = 0;
-  noteInterval = playInterval / 2;
-  nextNotesTime = getQuantizedTime(audioContext.currentTime) - noteInterval;
-  parts.forEach((p) => {
-    p.noteIndex = 0;
-  });
-  isPlaying = true;
-}
-function stop() {
-  isPlaying = false;
-  parts.forEach((p) => {
-    stop$1(p.soundEffect);
-  });
-}
-function update$1() {
-  if (!isPlaying) {
-    return;
-  }
-  const currentTime = audioContext.currentTime;
-  if (currentTime < nextNotesTime) {
-    return;
-  }
-  nextNotesTime += noteInterval;
-  if (nextNotesTime < currentTime) {
-    nextNotesTime = getQuantizedTime(currentTime);
-  }
-  parts.forEach((p) => {
-    updatePart(p, nextNotesTime);
-  });
-  notesStepsIndex++;
-  if (notesStepsIndex >= notesStepsCount) {
-    notesStepsIndex = 0;
-  }
-}
-function updatePart(p, time) {
+function update$2(t, p, time) {
   const n = p.sequence.notes[p.noteIndex];
   if (n == null) {
     return;
   }
-  if ((p.soundEffect.type === "synth" || p.soundEffect.type === "tone") && p.endStep === notesStepsIndex) {
+  if ((p.soundEffect.type === "synth" || p.soundEffect.type === "tone") && p.endStep === t.notesStepsIndex) {
     stop$1(p.soundEffect, time);
   }
-  if (n.quantizedStartStep !== notesStepsIndex) {
+  if (n.quantizedStartStep !== t.notesStepsIndex) {
     return;
   }
   if (p.soundEffect.type === "synth" || p.soundEffect.type === "tone") {
@@ -1888,55 +1855,150 @@ function updatePart(p, time) {
     p.visualizer.redraw(n);
   }
   p.endStep = n.quantizedEndStep;
-  if (p.endStep >= notesStepsCount) {
-    p.endStep -= notesStepsCount;
+  if (p.endStep >= t.notesStepsCount) {
+    p.endStep -= t.notesStepsCount;
   }
   p.noteIndex++;
   if (p.noteIndex >= p.sequence.notes.length) {
     p.noteIndex = 0;
   }
 }
+let tracks = [];
+function init$1() {
+  stopAll();
+  tracks = [];
+}
+function get(parts, notesStepsCount, speedRatio = 1) {
+  parts.forEach((p) => {
+    p.noteIndex = 0;
+  });
+  const t = {
+    parts,
+    notesStepsCount,
+    notesStepsIndex: void 0,
+    noteInterval: void 0,
+    nextNotesTime: void 0,
+    speedRatio,
+    isPlaying: false,
+    isLooping: false
+  };
+  initTrack(t);
+  return t;
+}
+function initTrack(track) {
+  const noteInterval = playInterval / 2 / track.speedRatio;
+  track.notesStepsIndex = 0;
+  track.noteInterval = noteInterval;
+  track.nextNotesTime = getQuantizedTime(audioContext.currentTime) - noteInterval;
+}
+function add(track) {
+  tracks.push(track);
+}
+function remove(track) {
+  tracks = tracks.filter((t) => t !== track);
+}
+function update$1() {
+  tracks.forEach((t) => {
+    updateTrack(t);
+  });
+}
+function play(track, isLooping = false) {
+  track.isLooping = isLooping;
+  initTrack(track);
+  track.isPlaying = true;
+}
+function stop(track) {
+  track.isPlaying = false;
+  track.parts.forEach((p) => {
+    stop$1(p.soundEffect);
+  });
+}
+function stopAll() {
+  tracks.forEach((t) => {
+    stop(t);
+  });
+}
+function updateTrack(track) {
+  if (!track.isPlaying) {
+    return;
+  }
+  const currentTime = audioContext.currentTime;
+  if (currentTime < track.nextNotesTime) {
+    return;
+  }
+  track.nextNotesTime += track.noteInterval;
+  if (track.nextNotesTime < currentTime) {
+    track.nextNotesTime = getQuantizedTime(currentTime);
+  }
+  track.parts.forEach((p) => {
+    update$2(track, p, track.nextNotesTime);
+  });
+  track.notesStepsIndex++;
+  if (track.notesStepsIndex >= track.notesStepsCount) {
+    if (track.isLooping) {
+      track.notesStepsIndex = 0;
+    } else {
+      track.isPlaying = false;
+    }
+  }
+}
 const mmlQuantizeInterval = 0.125;
 let baseRandomSeed;
 let soundEffects;
-function playMml(mmlStrings, volume = 1) {
-  let notesStepsCount2 = 0;
-  const tracks = mmlStrings.map((ms) => fromMml(ms));
-  tracks.forEach((t) => {
+let mmlTrack;
+function playMml(mmlStrings, volume2 = 1, speed = 1, isLooping = true) {
+  let notesStepsCount = 0;
+  const tracks2 = mmlStrings.map((ms) => fromMml(ms));
+  tracks2.forEach((t) => {
     const s = getNotesStepsCount(t.mml);
-    if (s > notesStepsCount2) {
-      notesStepsCount2 = s;
+    if (s > notesStepsCount) {
+      notesStepsCount = s;
     }
   });
-  const parts2 = tracks.map((t) => {
+  const parts = tracks2.map((t) => {
     const { mml, args } = t;
-    const sequence = mmlToQuantizedSequence(mml, notesStepsCount2);
-    const se = getForSequence(sequence, args.isDrum, args.seed, args.type, args.volume * volume);
-    return get(mml, sequence, se);
+    const sequence = mmlToQuantizedSequence(mml, notesStepsCount);
+    const se = getForSequence(sequence, args.isDrum, args.seed, args.type, args.volume * volume2);
+    return get$1(mml, sequence, se);
   });
-  play(parts2, notesStepsCount2);
+  mmlTrack = get(parts, notesStepsCount, speed);
+  add(mmlTrack);
+  play(mmlTrack, isLooping);
 }
 function stopMml() {
-  stop();
+  if (mmlTrack == null) {
+    return;
+  }
+  stop(mmlTrack);
+  remove(mmlTrack);
+  mmlTrack = void 0;
 }
-function playSoundEffect(type = void 0, seed = void 0, count = 2, volume = 1, freq = void 0) {
-  const key = `${type}_${seed}_${count}_${volume}_${freq}`;
+function playSoundEffect(type = void 0, seed = void 0, numberOfSounds = 2, volume2 = 1, freq = void 0) {
+  const key = `${type}_${seed}_${numberOfSounds}_${volume2}_${freq}`;
   if (soundEffects[key] == null) {
-    const se = get$1(type, seed == null ? baseRandomSeed : seed, count, 0.05 * volume, freq);
-    add(se);
+    const se = get$2(type, seed == null ? baseRandomSeed : seed, numberOfSounds, volume2, freq);
+    add$1(se);
     soundEffects[key] = se;
   }
   play$1(soundEffects[key]);
 }
 function update() {
   update$1();
-  update$2();
+  update$3();
 }
-function init(_baseRandomSeed = 1, audioContext2 = void 0) {
-  baseRandomSeed = _baseRandomSeed;
-  init$2(audioContext2);
+function init(baseRandomSeed2 = 1, audioContext2 = void 0) {
+  setSeed(baseRandomSeed2);
+  init$3(audioContext2);
+  reset();
+}
+function reset() {
   init$1();
+  init$2();
   soundEffects = {};
+  stopMml();
+}
+function setSeed(_baseRandomSeed = 1) {
+  baseRandomSeed = _baseRandomSeed;
 }
 function getNotesStepsCount(mml) {
   const iter = new lib(mml);
@@ -1946,22 +2008,22 @@ function getNotesStepsCount(mml) {
     }
   }
 }
-function mmlToQuantizedSequence(mml, notesStepsCount2) {
+function mmlToQuantizedSequence(mml, notesStepsCount) {
   const notes = [];
   const iter = new lib(mml);
   for (let ne of iter) {
     if (ne.type === "note") {
       let endStep = Math.floor(ne.time + ne.duration / mmlQuantizeInterval);
-      if (endStep >= notesStepsCount2) {
-        endStep -= notesStepsCount2;
+      if (endStep >= notesStepsCount) {
+        endStep -= notesStepsCount;
       }
       notes.push({
         pitch: ne.noteNumber,
         quantizedStartStep: Math.floor(ne.time / mmlQuantizeInterval),
-        endStep
+        quantizedEndStep: endStep
       });
     }
   }
   return { notes };
 }
-export { init, playMml, playSoundEffect, setQuantize, setTempo, start as startAudio, stopMml, update };
+export { init, playEmpty, playMml, playSoundEffect, reset, resumeAudioContext, setQuantize, setSeed, setTempo, setVolume, start as startAudio, stopMml, update };
