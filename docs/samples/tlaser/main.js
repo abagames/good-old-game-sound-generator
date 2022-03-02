@@ -219,6 +219,7 @@ function gameOver() {
 
 function init() {
   ggg.init(8);
+  ggg.setTempo(150);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
     document.addEventListener(e, () => {
       ggg.startAudio();
