@@ -1886,7 +1886,7 @@ function get(parts, notesStepsCount, speedRatio = 1) {
   return t;
 }
 function initTrack(track) {
-  const noteInterval = playInterval / 2 / track.speedRatio;
+  const noteInterval = playInterval / 4 / track.speedRatio;
   track.notesStepsIndex = 0;
   track.noteInterval = noteInterval;
   track.nextNotesTime = getQuantizedTime(audioContext.currentTime) - noteInterval;
@@ -2013,7 +2013,7 @@ function mmlToQuantizedSequence(mml, notesStepsCount) {
   const iter = new lib(mml);
   for (let ne of iter) {
     if (ne.type === "note") {
-      let endStep = Math.floor(ne.time + ne.duration / mmlQuantizeInterval);
+      let endStep = Math.floor((ne.time + ne.duration) / mmlQuantizeInterval);
       if (endStep >= notesStepsCount) {
         endStep -= notesStepsCount;
       }

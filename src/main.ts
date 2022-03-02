@@ -184,7 +184,7 @@ function setDefaultMml() {
 
 function init() {
   initAudio();
-  setTempo(150);
+  setTempo(90);
   soundEffect.init();
   generator.init();
   generatedPlayer = player.get(document.getElementById("main"), () => {

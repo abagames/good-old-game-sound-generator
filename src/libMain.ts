@@ -127,7 +127,7 @@ function mmlToQuantizedSequence(mml: string, notesStepsCount: number) {
   const iter = new MMLIterator(mml);
   for (let ne of iter) {
     if (ne.type === "note") {
-      let endStep = Math.floor(ne.time + ne.duration / mmlQuantizeInterval);
+      let endStep = Math.floor((ne.time + ne.duration) / mmlQuantizeInterval);
       if (endStep >= notesStepsCount) {
         endStep -= notesStepsCount;
       }

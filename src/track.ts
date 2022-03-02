@@ -43,7 +43,7 @@ export function get(
 }
 
 function initTrack(track: Track) {
-  const noteInterval = playInterval / 2 / track.speedRatio;
+  const noteInterval = playInterval / 4 / track.speedRatio;
   track.notesStepsIndex = 0;
   track.noteInterval = noteInterval;
   track.nextNotesTime =

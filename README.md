@@ -140,7 +140,7 @@ function init() {
   // Initialize the library by giving a random number seed for
   // sound effect generation as an argument.
   ggg.init(3);
-  ggg.setTempo(150);
+  ggg.setTempo(80);
   ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
     document.addEventListener(e, () => {
       // Calling the `startAudio` function from within the event handler of

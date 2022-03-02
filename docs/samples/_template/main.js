@@ -1,6 +1,6 @@
 function init() {
   ggg.init(1);
-  ggg.setTempo(150);
+  ggg.setTempo(90);
   window.addEventListener("click", () => {
     ggg.startAudio();
   });
