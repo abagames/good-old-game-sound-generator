@@ -27,7 +27,7 @@ r
 options = {
   theme: "dark",
   isReplayEnabled: true,
-  isSoundEnabled: false,
+  seed: 1,
 };
 
 let inputPressedPos;
@@ -54,7 +54,9 @@ let releasedPos = vec();
 function update() {
   if (!ticks) {
     if (!isReplaying) {
-      ggg.playMml(bgm);
+      sss.setTempo(90);
+      sss.setQuantize(16);
+      sss.playMml(bgm);
     }
     inputPressedPos = vec();
     sight = { pos: vec(50, 50), pressedPos: vec() };
@@ -101,7 +103,7 @@ function update() {
     }
   });
   if (laser == null && te != null) {
-    ggg.playSoundEffect("explosion");
+    play("explosion");
     laser = {
       pos: vec(50, 99),
       z: 1,
@@ -177,14 +179,14 @@ function update() {
       mirror: { y: e.vel.y > 0 ? -1 : 1 },
     }).isColliding;
     if (e === te && c.rect.purple) {
-      ggg.playSoundEffect("hit");
+      play("hit");
       particle(e.pos, 9, 2 / sqrt(e.z));
       addScore(multiplier, e.pos);
       multiplier++;
       return true;
     }
     if (e.lockIndex < 0 && c.char.b) {
-      ggg.playSoundEffect("select");
+      play("select");
       e.lockIndex = lockIndex;
       lockIndex++;
     }
@@ -203,32 +205,18 @@ function update() {
     if (e.lockIndex < 0 && (e.vel.y < 0 ? e.pos.y < 0 : e.pos.y > 99)) {
       color("red");
       text("X", e.pos.x, clamp(e.pos.y, 5, 95), { scale: { x: 1.5, y: 1.5 } });
-      ggg.playSoundEffect("random", 3);
+      play("random");
       gameOver();
     }
   });
   color("black");
   text(`x${multiplier}`, 3, 9);
-  ggg.update();
 }
 
 function gameOver() {
-  ggg.stopMml();
+  sss.stopMml();
   end();
 }
-
-function init() {
-  ggg.init(8);
-  ggg.setTempo(90);
-  ggg.setQuantize(16);
-  ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
-    document.addEventListener(e, () => {
-      ggg.startAudio();
-    });
-  });
-}
-
-window.addEventListener("load", init);
 
 const bgm = [
   "@synth@s734516504 v40 l4. o4 r16gr16 gr16>c r16<f+ r16g2.^8. r16 >a+ r16g",

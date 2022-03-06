@@ -283,7 +283,7 @@ export function fromMml(mml: string) {
     leftMml = leftMml.replace(/@s\d+/, "");
   }
   const vs = leftMml.match(/v\d+/);
-  let volume: number;
+  let volume = 0.5;
   if (vs != null) {
     volume = Number.parseInt(vs[0].substring(1)) / volumeMultiplier;
     leftMml = leftMml.replace(/v\d+/, "");

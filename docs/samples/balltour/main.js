@@ -32,10 +32,9 @@ lllll
 ];
 
 options = {
-  // Disable the audio feature of `crisp-game-lib`.
-  isSoundEnabled: false,
   theme: "dark",
   isReplayEnabled: true,
+  seed: 7,
 };
 
 /** @type {{pos: Vector, yAngle: number, vx: number, ticks: number}} */
@@ -51,9 +50,10 @@ let multiplier;
 function update() {
   if (!ticks) {
     if (!isReplaying) {
+      sss.setTempo(80);
       // Play BGM at the start of the game.
       // The 'bgm' variable is assigned MML string copied from the clipboard.
-      ggg.playMml(bgm);
+      sss.playMml(bgm);
     }
     player = { pos: vec(90, 50), yAngle: 0, vx: 0, ticks: 0 };
     spikes = [];
@@ -90,14 +90,14 @@ function update() {
   player.ticks += clamp((py - player.pos.y) * 9 + 1, 0, 9);
   if (input.isJustPressed) {
     // Play the `hit` sound effect.
-    ggg.playSoundEffect("hit");
+    play("hit");
   }
   player.vx = (input.isPressed ? 1 : 0.1) * difficulty;
   char(addWithCharCode("a", floor(player.ticks / 50) % 2), player.pos);
   color("red");
   if (char("c", player.pos.x, player.pos.y - 6).isColliding.text["*"]) {
     // Play the `explosion` sound effect.
-    ggg.playSoundEffect("explosion");
+    play("explosion");
     gameOver();
   }
   nextBallDist -= player.vx;
@@ -119,7 +119,7 @@ function update() {
       addScore(floor(multiplier), player.pos);
       multiplier += 10;
       // Play the `select` sound effect.
-      ggg.playSoundEffect("select");
+      play("select");
       return true;
     }
     return b.x > 103;
@@ -127,31 +127,13 @@ function update() {
   multiplier = clamp(multiplier - 0.02 * difficulty, 1, 999);
   color("black");
   text(`x${floor(multiplier)}`, 3, 9);
-  // The `update` function needs to be called at regular intervals.
-  ggg.update();
 }
 
 function gameOver() {
   // Stop BGM at the end of the game.
-  ggg.stopMml();
+  sss.stopMml();
   end();
 }
-
-function init() {
-  // Initialize the library by giving a random number seed for
-  // sound effect generation as an argument.
-  ggg.init(3);
-  ggg.setTempo(80);
-  ["mousedown", "touchstart", "mouseup", "touchend", "keydown"].forEach((e) => {
-    document.addEventListener(e, () => {
-      // Calling the `startAudio` function from within the event handler of
-      // a user operation will enable audio.
-      ggg.startAudio();
-    });
-  });
-}
-
-window.addEventListener("load", init);
 
 // MML for BGM.
 const bgm = [

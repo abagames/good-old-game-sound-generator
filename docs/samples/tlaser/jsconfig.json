@@ -1,7 +1,0 @@
-{
-  "compilerOptions": {
-    "target": "es2015",
-    "checkJs": true
-  },
-  "include": ["*.js", "../../typings/ggg.d.ts", "../../lib/crisp-game-lib.d.ts"]
-}
