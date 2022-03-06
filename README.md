@@ -16,12 +16,12 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 
 1. On the Demo page, click the 'Copy to clipboard' button to copy the MML JSON data to your clipboard.
 
-1. Call the `sss.playMml` function with the JSON in the clipboard as the first argument.
+1. Call the `sss.playMml` function with the MML strings in the clipboard as the first argument.
 
 ## Sample game
 
-<a href="https://abagames.github.io/crisp-game-lib-games/?balltour"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/balltour/screenshot.gif" width="25%" loading="lazy"></a>
-<a href="https://abagames.github.io/crisp-game-lib-games/?tlaser"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/tlaser/screenshot.gif" width="25%" loading="lazy"></a>
+<a href="https://abagames.github.io/crisp-game-lib-games/?balltour"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/balltour/screenshot.gif" width="50%" loading="lazy"></a>
+<a href="https://abagames.github.io/crisp-game-lib-games/?tlaser"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/tlaser/screenshot.gif" width="50%" loading="lazy"></a>
 
 ## Sample code
 
