@@ -14,7 +14,7 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 
 1. Import [sounds-some-sounds](https://github.com/abagames/sounds-some-sounds) or [crisp-game-lib](https://github.com/abagames/crisp-game-lib) library.
 
-1. On the Demo page, click the 'Copy to clipboard' button to copy the MML JSON data to your clipboard.
+1. On the Demo page, click the 'Copy to clipboard' button to copy the MML strings to your clipboard.
 
 1. Call the `sss.playMml` function with the MML strings in the clipboard as the first argument.
 
