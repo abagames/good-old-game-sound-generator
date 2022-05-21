@@ -20,7 +20,13 @@ Generate sound effects and background music for good old-fashioned mini-games. P
 
 ## Sample game
 
-<a href="https://abagames.github.io/crisp-game-lib-games/?balltour"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/balltour/screenshot.gif" width="50%" loading="lazy"></a><a href="https://abagames.github.io/crisp-game-lib-games/?tlaser"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/tlaser/screenshot.gif" width="50%" loading="lazy"></a>
+- [BALL TOUR](https://abagames.github.io/crisp-game-lib-games/?balltour)
+
+<a href="https://abagames.github.io/crisp-game-lib-games/?balltour"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/balltour/screenshot.gif" loading="lazy"></a>
+
+- [T LASER](https://abagames.github.io/crisp-game-lib-games/?tlaser)
+
+<a href="https://abagames.github.io/crisp-game-lib-games/?tlaser"><img src="https://github.com/abagames/crisp-game-lib-games/raw/main/docs/tlaser/screenshot.gif" loading="lazy"></a>
 
 ## Sample code
 
